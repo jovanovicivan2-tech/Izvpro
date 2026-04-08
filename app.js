@@ -62,22 +62,28 @@ async function loadDashboard() {
     .order('due_date', { ascending: true })
     .range(0, 2);
 
+  const { count: documentsCount, error: documentsError } = await db
+    .from('v_documents_overview')
+    .select('*', { count: 'exact', head: true });
+
   if (kpiError) {
     console.error('KPI GRESKA:', kpiError);
     return;
   }
-
   if (casesError) {
     console.error('CASES GRESKA:', casesError);
   }
-
   if (deadlinesError) {
     console.error('DEADLINES GRESKA:', deadlinesError);
+  }
+  if (documentsError) {
+    console.error('DOCUMENTS GRESKA:', documentsError);
   }
 
   const kpis = kpiData || {};
   const cases = casesData || [];
   const deadlines = deadlinesData || [];
+  const docsCount = documentsCount || 0;
 
   const cards = document.querySelectorAll('.kpis .card');
 
@@ -86,36 +92,55 @@ async function loadDashboard() {
   const documentsCard = cards[2];
   const urgentCasesCard = cards[3];
 
-  const openDeadlines = cases.reduce((sum, item) => sum + Number(item.deadlines_open || 0), 0);
-  const overdueDeadlines = cases.reduce((sum, item) => sum + Number(item.deadlines_overdue || 0), 0);
+  const openDeadlines = cases.reduce(
+    (sum, item) => sum + Number(item.deadlines_open || 0),
+    0
+  );
+  const overdueDeadlines = cases.reduce(
+    (sum, item) => sum + Number(item.deadlines_overdue || 0),
+    0
+  );
 
   if (totalCasesCard) {
-    totalCasesCard.querySelector('.metric').textContent = formatNumber(kpis.total_cases);
-    totalCasesCard.querySelector('.meta').textContent =
-      `${formatNumber(kpis.active_cases)} aktivnih / ${formatNumber(kpis.closed_cases)} zatvorenih`;
+    totalCasesCard.querySelector('.metric').textContent = formatNumber(
+      kpis.total_cases
+    );
+    totalCasesCard.querySelector('.meta').textContent = `${formatNumber(
+      kpis.active_cases
+    )} aktivnih / ${formatNumber(kpis.closed_cases)} zatvorenih`;
   }
 
   if (openDeadlinesCard) {
-    openDeadlinesCard.querySelector('.metric').textContent = formatNumber(openDeadlines);
-    openDeadlinesCard.querySelector('.meta').textContent =
-      `${formatNumber(overdueDeadlines)} rokova kasni`;
+    openDeadlinesCard.querySelector('.metric').textContent = formatNumber(
+      openDeadlines
+    );
+    openDeadlinesCard.querySelector('.meta').textContent = `${formatNumber(
+      overdueDeadlines
+    )} rokova kasni`;
   }
 
   if (documentsCard) {
-    documentsCard.querySelector('.metric').textContent = '-';
+    documentsCard.querySelector('.metric').textContent = formatNumber(
+      docsCount
+    );
     documentsCard.querySelector('.meta').textContent =
-      'Broj dokumenata još nije povezan na dashboard';
+      'Ukupan broj dokumenata u sistemu';
   }
 
   if (urgentCasesCard) {
-    urgentCasesCard.querySelector('.metric').textContent = formatNumber(kpis.urgent_cases);
-    urgentCasesCard.querySelector('.meta').textContent =
-      `Visok prioritet: ${formatNumber(kpis.high_priority_cases)}`;
+    urgentCasesCard.querySelector('.metric').textContent = formatNumber(
+      kpis.urgent_cases
+    );
+    urgentCasesCard.querySelector('.meta').textContent = `Visok prioritet: ${formatNumber(
+      kpis.high_priority_cases
+    )}`;
   }
 
   const urgentList = document.querySelector('.grid-2 .card:nth-child(2) .list');
   if (urgentList) {
-    urgentList.innerHTML = deadlines.map(item => `
+    urgentList.innerHTML = deadlines
+      .map(
+        (item) => `
       <div class="list-item">
         <div>
           <strong>${item.case_number || '-'}</strong>
@@ -123,12 +148,16 @@ async function loadDashboard() {
         </div>
         ${getDeadlineBadge(item.dashboard_status)}
       </div>
-    `).join('');
+    `
+      )
+      .join('');
   }
 
   const tbody = document.querySelector('table tbody');
   if (tbody) {
-    tbody.innerHTML = cases.map(item => `
+    tbody.innerHTML = cases
+      .map(
+        (item) => `
       <tr>
         <td>${item.case_number || '-'}</td>
         <td>${item.last_status_note || item.title || '-'}</td>
@@ -136,7 +165,9 @@ async function loadDashboard() {
         <td>${formatDate(item.last_status_changed_at || item.created_at)}</td>
         <td><span class="status success">${item.status || '-'}</span></td>
       </tr>
-    `).join('');
+    `
+      )
+      .join('');
   }
 
   const sidebarNumber = document.querySelector('.sidebar-card strong');
