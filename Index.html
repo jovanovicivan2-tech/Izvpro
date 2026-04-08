@@ -1,1 +1,469 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IZVPRO - Kontrolna tabla</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --surface: #ffffff;
+      --surface-2: #f3f0ea;
+      --border: #ddd8cf;
+      --text: #23211c;
+      --muted: #6f6d67;
+      --primary: #0f5f68;
+      --primary-soft: #dbe9e6;
+      --success: #4b7a31;
+      --warning: #a86121;
+      --danger: #a33f52;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+    }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Satoshi', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--surface-2);
+      border-right: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+
+    .brand h1 {
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 12px;
+      display: block;
+      font-size: 15px;
+    }
+
+    .nav a.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: var(--shadow);
+      font-weight: 600;
+    }
+
+    .sidebar-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+
+    .sidebar-card h3 {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .sidebar-card strong {
+      font-size: 30px;
+      display: block;
+    }
+
+    .content {
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .topbar h2 {
+      font-size: 32px;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .topbar p {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .metric {
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .meta {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+
+    .pill {
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .bars {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 40px;
+      gap: 12px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .bar {
+      height: 10px;
+      background: #e8e3db;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .list-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .list-item small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .danger { background: #f3dde2; color: var(--danger); }
+    .warning { background: #f4e5d7; color: var(--warning); }
+    .success { background: #dce8d7; color: var(--success); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 14px 10px;
+      border-bottom: 1px solid #ece7df;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-weight: 600;
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .kpis, .grid-2 { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">IZ</div>
+        <div>
+          <h1>IZVPRO</h1>
+          <p>Upravljanje predmetima</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="active" href="#">Kontrolna tabla</a>
+        <a href="#">Predmeti</a>
+        <a href="#">Dokumenta</a>
+        <a href="#">Rokovi</a>
+        <a href="#">Statusi</a>
+        <a href="#">Korisnici</a>
+      </nav>
+
+      <div class="sidebar-card">
+        <h3>Danas</h3>
+        <strong>12</strong>
+        <p class="meta">stavki traži proveru</p>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div>
+          <h2>Kontrolna tabla</h2>
+          <p>Pregled predmeta, rokova i dokumenata na jednom mestu.</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary">Izvezi pregled</button>
+          <button class="btn btn-primary">Novi predmet</button>
+        </div>
+      </div>
+
+      <section class="kpis">
+        <div class="card">
+          <h3>Ukupno predmeta</h3>
+          <div class="metric">148</div>
+          <div class="meta">+12 u odnosu na prošlu nedelju</div>
+        </div>
+        <div class="card">
+          <h3>Otvoreni rokovi</h3>
+          <div class="metric">23</div>
+          <div class="meta">7 rokova dospeva u 3 dana</div>
+        </div>
+        <div class="card">
+          <h3>Dokumenta</h3>
+          <div class="metric">612</div>
+          <div class="meta">Poslednji upload danas u 08:41</div>
+        </div>
+        <div class="card">
+          <h3>Predmeti u zastoju</h3>
+          <div class="metric">5</div>
+          <div class="meta">Potrebna intervencija administratora</div>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <div class="card">
+          <div class="section-head">
+            <h3>Status predmeta</h3>
+            <span class="pill">Poslednjih 30 dana</span>
+          </div>
+          <div class="bars">
+            <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:74%"></span></div><strong>74</strong></div>
+            <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:38%"></span></div><strong>38</strong></div>
+            <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:61%"></span></div><strong>61</strong></div>
+            <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:17%"></span></div><strong>17</strong></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h3>Hitni rokovi</h3>
+            <span class="pill">Prioritet</span>
+          </div>
+          <div class="list">
+            <div class="list-item">
+              <div>
+                <strong>Predmet A-248/26</strong>
+                <small>Rok za dopunu dokumentacije — danas</small>
+              </div>
+              <span class="status danger">Danas</span>
+            </div>
+            <div class="list-item">
+              <div>
+                <strong>Predmet B-102/26</strong>
+                <small>Rok za mišljenje komisije — sutra</small>
+              </div>
+              <span class="status warning">24h</span>
+            </div>
+            <div class="list-item">
+              <div>
+                <strong>Predmet C-091/26</strong>
+                <small>Verifikacija rešenja — za 3 dana</small>
+              </div>
+              <span class="status success">Planirano</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h3>Poslednje aktivnosti</h3>
+          <span class="pill">Ažurirano pre 2 min</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Predmet</th>
+              <th>Radnja</th>
+              <th>Korisnik</th>
+              <th>Datum</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A-248/26</td>
+              <td>Dodat dokument</td>
+              <td>J. Petrović</td>
+              <td>08.04.2026 08:41</td>
+              <td><span class="status success">Ažurno</span></td>
+            </tr>
+            <tr>
+              <td>B-102/26</td>
+              <td>Promenjen status</td>
+              <td>M. Ilić</td>
+              <td>08.04.2026 08:12</td>
+              <td><span class="status warning">Na proveri</span></td>
+            </tr>
+            <tr>
+              <td>C-091/26</td>
+              <td>Kreiran predmet</td>
+              <td>A. Nikolić</td>
+              <td>08.04.2026 07:58</td>
+              <td><span class="status success">Otvoren</span></td>
+            </tr>
+            <tr>
+              <td>D-014/26</td>
+              <td>Istek roka</td>
+              <td>Sistem</td>
+              <td>08.04.2026 07:30</td>
+              <td><span class="status danger">Hitno</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
