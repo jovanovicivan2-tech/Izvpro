@@ -79,23 +79,39 @@ async function loadDashboard() {
   const cases = casesData || [];
   const deadlines = deadlinesData || [];
 
-  const metricEls = document.querySelectorAll('.metric');
-  const metaEls = document.querySelectorAll('.meta');
+  const cards = document.querySelectorAll('.kpis .card');
 
-  if (metricEls[0]) metricEls[0].textContent = formatNumber(kpis.total_cases);
-  if (metaEls[0]) metaEls[0].textContent = `${formatNumber(kpis.active_cases)} aktivnih / ${formatNumber(kpis.closed_cases)} zatvorenih`;
+  const totalCasesCard = cards[0];
+  const openDeadlinesCard = cards[1];
+  const documentsCard = cards[2];
+  const urgentCasesCard = cards[3];
 
   const openDeadlines = cases.reduce((sum, item) => sum + Number(item.deadlines_open || 0), 0);
   const overdueDeadlines = cases.reduce((sum, item) => sum + Number(item.deadlines_overdue || 0), 0);
 
-  if (metricEls[1]) metricEls[1].textContent = formatNumber(openDeadlines);
-  if (metaEls[1]) metaEls[1].textContent = `${formatNumber(overdueDeadlines)} rokova kasni`;
+  if (totalCasesCard) {
+    totalCasesCard.querySelector('.metric').textContent = formatNumber(kpis.total_cases);
+    totalCasesCard.querySelector('.meta').textContent =
+      `${formatNumber(kpis.active_cases)} aktivnih / ${formatNumber(kpis.closed_cases)} zatvorenih`;
+  }
 
-  if (metricEls[2]) metricEls[2].textContent = formatCurrency(kpis.total_claim_amount);
-  if (metaEls[2]) metaEls[2].textContent = `Aktivna potraživanja: ${formatCurrency(kpis.active_claim_amount)}`;
+  if (openDeadlinesCard) {
+    openDeadlinesCard.querySelector('.metric').textContent = formatNumber(openDeadlines);
+    openDeadlinesCard.querySelector('.meta').textContent =
+      `${formatNumber(overdueDeadlines)} rokova kasni`;
+  }
 
-  if (metricEls[3]) metricEls[3].textContent = formatNumber(kpis.urgent_cases);
-  if (metaEls[3]) metaEls[3].textContent = `Visok prioritet: ${formatNumber(kpis.high_priority_cases)}`;
+  if (documentsCard) {
+    documentsCard.querySelector('.metric').textContent = '-';
+    documentsCard.querySelector('.meta').textContent =
+      'Broj dokumenata još nije povezan na dashboard';
+  }
+
+  if (urgentCasesCard) {
+    urgentCasesCard.querySelector('.metric').textContent = formatNumber(kpis.urgent_cases);
+    urgentCasesCard.querySelector('.meta').textContent =
+      `Visok prioritet: ${formatNumber(kpis.high_priority_cases)}`;
+  }
 
   const urgentList = document.querySelector('.grid-2 .card:nth-child(2) .list');
   if (urgentList) {
