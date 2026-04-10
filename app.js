@@ -4,6 +4,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_yCHAiRyqvEx9Jeof7EEP3w_r0pDFzew';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const RPC = {
+  createEvent: 'create_case_event',
+  createDeadline: 'create_case_deadline',
+  changeStatus: 'change_case_status'
+};
+
 let currentCases = [];
 let currentSelectedCaseId = null;
 let currentSelectedCaseHeader = null;
@@ -57,6 +63,46 @@ function statusClass(status) {
 
 function getDeadlineBadge(status) {
   return `<span class="status ${statusClass(status)}">${safe(status, 'Aktivan')}</span>`;
+}
+
+function getErrorMessage(err) {
+  const msg = String(err?.message || 'Nepoznata greška');
+
+  if (msg.toLowerCase().includes('row-level security')) {
+    return 'Supabase RLS blokira ovu akciju. Reši policy ili koristi RPC funkciju sa odgovarajućim pravima.';
+  }
+
+  if (msg.toLowerCase().includes('function') && msg.toLowerCase().includes('does not exist')) {
+    return 'Tražena Supabase funkcija još nije napravljena. Prvo unesi SQL funkciju u Supabase.';
+  }
+
+  return msg;
+}
+
+async function callRpc(functionName, params) {
+  const { data, error } = await db.rpc(functionName, params);
+  if (error) throw error;
+  return data;
+}
+
+async function rpcCreateEvent({ caseId, eventType, eventDate, description }) {
+  return callRpc(RPC.createEvent, {
+    p_case_id: caseId,
+    p_event_type: eventType,
+    p_event_date: eventDate,
+    p_description: description || null
+  });
+}
+
+async function rpcCreateDeadline({ caseId, title, deadlineType, dueDate, status, note }) {
+  return callRpc(RPC.createDeadline, {
+    p_case_id: caseId,
+    p_title: title,
+    p_deadline_type: deadlineType,
+    p_due_date: dueDate,
+    p_status: status || null,
+    p_note: note || null
+  });
 }
 
 function injectEnhancements() {
@@ -285,7 +331,7 @@ function injectEnhancements() {
     }
 
     .modal-card {
-      width: min(680px, 100%);
+      width: min(720px, 100%);
       box-shadow: 0 20px 60px rgba(0,0,0,0.18);
     }
 
@@ -525,27 +571,32 @@ function wireCasesToolbar() {
 
 async function loadDashboard() {
   try {
-    const { data: kpiData } = await db
+    const { data: kpiData, error: kpiError } = await db
       .from('v_dashboard_kpis')
       .select('*')
       .limit(1)
       .single();
 
-    const { data: casesData } = await db
+    const { data: casesData, error: casesError } = await db
       .from('v_cases_dashboard')
       .select('*')
       .order('created_at', { ascending: false })
       .range(0, 9);
 
-    const { data: deadlinesData } = await db
+    const { data: deadlinesData, error: deadlinesError } = await db
       .from('v_deadlines_dashboard')
       .select('*')
       .order('due_date', { ascending: true })
       .range(0, 2);
 
-    const { count: documentsCount } = await db
+    const { count: documentsCount, error: documentsError } = await db
       .from('v_documents_overview')
       .select('*', { count: 'exact', head: true });
+
+    if (kpiError) throw kpiError;
+    if (casesError) throw casesError;
+    if (deadlinesError) throw deadlinesError;
+    if (documentsError) throw documentsError;
 
     const kpis = kpiData || {};
     const cases = casesData || [];
@@ -840,9 +891,7 @@ function renderCaseDetail(header, deadlines, events, docs) {
   `;
 
   document.getElementById('btn-new-event')?.addEventListener('click', openNewEventModal);
-  document.getElementById('btn-new-deadline')?.addEventListener('click', () => {
-    alert('Sledeći korak: Novi rok.');
-  });
+  document.getElementById('btn-new-deadline')?.addEventListener('click', openNewDeadlineModal);
 }
 
 function closeModal() {
@@ -912,8 +961,7 @@ function openNewEventModal() {
     .toISOString()
     .slice(0, 16);
 
-  const eventDateInput = document.getElementById('event-date');
-  if (eventDateInput) eventDateInput.value = localValue;
+  document.getElementById('event-date').value = localValue;
 
   document.getElementById('modal-close')?.addEventListener('click', closeModal);
   document.getElementById('cancel-event-btn')?.addEventListener('click', closeModal);
@@ -923,6 +971,86 @@ function openNewEventModal() {
   });
 
   document.getElementById('new-event-form')?.addEventListener('submit', handleNewEventSubmit);
+}
+
+function openNewDeadlineModal() {
+  if (!currentSelectedCaseId || !currentSelectedCaseHeader) {
+    alert('Prvo izaberi predmet.');
+    return;
+  }
+
+  closeModal();
+
+  const caseNumber = currentSelectedCaseHeader.case_number || currentSelectedCaseHeader.number || '-';
+
+  const modal = document.createElement('div');
+  modal.id = 'global-modal';
+  modal.className = 'modal-backdrop';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3>Novi rok</h3>
+          <p class="muted">Predmet: ${caseNumber}</p>
+        </div>
+        <button id="modal-close" class="btn btn-secondary">Zatvori</button>
+      </div>
+
+      <form id="new-deadline-form">
+        <div class="modal-grid">
+          <div class="field">
+            <label for="deadline-title">Naslov</label>
+            <input id="deadline-title" name="title" class="input" type="text" placeholder="npr. Rok za podnesak" required />
+          </div>
+
+          <div class="field">
+            <label for="deadline-type">Tip roka</label>
+            <input id="deadline-type" name="deadline_type" class="input" type="text" placeholder="npr. podnesak, žalba, dopuna" required />
+          </div>
+
+          <div class="field">
+            <label for="deadline-date">Rok</label>
+            <input id="deadline-date" name="due_date" class="input" type="datetime-local" required />
+          </div>
+
+          <div class="field">
+            <label for="deadline-status">Status</label>
+            <input id="deadline-status" name="status" class="input" type="text" placeholder="npr. otvoren" />
+          </div>
+
+          <div class="field full">
+            <label for="deadline-note">Napomena</label>
+            <textarea id="deadline-note" name="note" class="textarea" placeholder="Napomena uz rok"></textarea>
+          </div>
+        </div>
+
+        <div id="new-deadline-notice"></div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancel-deadline-btn" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" id="save-deadline-btn" class="btn btn-primary">Sačuvaj rok</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const now = new Date();
+  const localValue = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+
+  document.getElementById('deadline-date').value = localValue;
+
+  document.getElementById('modal-close')?.addEventListener('click', closeModal);
+  document.getElementById('cancel-deadline-btn')?.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.getElementById('new-deadline-form')?.addEventListener('submit', handleNewDeadlineSubmit);
 }
 
 async function handleNewEventSubmit(e) {
@@ -941,25 +1069,16 @@ async function handleNewEventSubmit(e) {
     return;
   }
 
-  const payload = {
-    case_id: currentSelectedCaseId,
-    event_type: eventType,
-    event_date: new Date(eventDate).toISOString(),
-    description: description || null
-  };
-
   try {
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Čuvanje...';
-    }
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Čuvanje...';
 
-    const { error } = await db
-      .from('case_events')
-      .insert(payload)
-      .select();
-
-    if (error) throw error;
+    await rpcCreateEvent({
+      caseId: currentSelectedCaseId,
+      eventType,
+      eventDate: new Date(eventDate).toISOString(),
+      description
+    });
 
     showNotice(notice, 'success', 'Događaj je uspešno sačuvan.');
 
@@ -971,26 +1090,58 @@ async function handleNewEventSubmit(e) {
     }, 700);
   } catch (err) {
     console.error('NEW EVENT GREŠKA:', err);
-
-    if (String(err.message || '').toLowerCase().includes('row-level security')) {
-      showNotice(
-        notice,
-        'error',
-        'RLS blokira insert u case_events. Prvo dodaj INSERT policy u Supabase.'
-      );
-      return;
-    }
-
-    showNotice(
-      notice,
-      'error',
-      `Greška pri upisu događaja: ${err.message || 'Nepoznata greška'}`
-    );
+    showNotice(notice, 'error', getErrorMessage(err));
   } finally {
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Sačuvaj događaj';
-    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Sačuvaj događaj';
+  }
+}
+
+async function handleNewDeadlineSubmit(e) {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const notice = document.getElementById('new-deadline-notice');
+  const saveBtn = document.getElementById('save-deadline-btn');
+
+  const title = form.title.value.trim();
+  const deadlineType = form.deadline_type.value.trim();
+  const dueDate = form.due_date.value;
+  const status = form.status.value.trim();
+  const note = form.note.value.trim();
+
+  if (!title || !deadlineType || !dueDate) {
+    showNotice(notice, 'error', 'Popuni obavezna polja.');
+    return;
+  }
+
+  try {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Čuvanje...';
+
+    await rpcCreateDeadline({
+      caseId: currentSelectedCaseId,
+      title,
+      deadlineType,
+      dueDate: new Date(dueDate).toISOString(),
+      status,
+      note
+    });
+
+    showNotice(notice, 'success', 'Rok je uspešno sačuvan.');
+
+    await loadSelectedCaseDetail(currentSelectedCaseId);
+    await loadDashboard();
+
+    setTimeout(() => {
+      closeModal();
+    }, 700);
+  } catch (err) {
+    console.error('NEW DEADLINE GREŠKA:', err);
+    showNotice(notice, 'error', getErrorMessage(err));
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Sačuvaj rok';
   }
 }
 
