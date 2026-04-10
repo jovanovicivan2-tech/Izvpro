@@ -1,5 +1,12 @@
-const SUPABASE_URL = 'https://bwpyivqdinemhfrrjdhu.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_yCHAiRyqvEx9Jeof7EEP3w_r0pDFzew';
+// SUPABASE CONFIG
+// Ključevi se učitavaju iz window.__env (injektovano pre ovog fajla)
+// ili kao fallback za lokalni razvoj — NIKAD ne commit-uj prave ključeve ovde
+const SUPABASE_URL = (window.__env && window.__env.SUPABASE_URL) || '';
+const SUPABASE_ANON_KEY = (window.__env && window.__env.SUPABASE_ANON_KEY) || '';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.warn('[IZVPRO] Supabase config nije postavljen. Provjeri window.__env ili Vercel env varijable.');
+}
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -104,6 +111,13 @@ function getErrorMessage(err) {
   }
 
   return msg;
+}
+
+function logError(context, err) {
+  // Sanitizovano logovanje — ne otkriva interne detalje u produkciji
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.error(`[IZVPRO][${context}]`, err);
+  }
 }
 
 async function callRpc(functionName, params) {
@@ -696,7 +710,7 @@ async function loadDashboard() {
     if (sidebarNumber) sidebarNumber.textContent = formatNumber(kpis.urgent_cases || 0);
     if (sidebarMeta) sidebarMeta.textContent = 'hitnih stavki za proveru';
   } catch (err) {
-    console.error('DASHBOARD GREŠKA:', err);
+    logError('DASHBOARD', err);
   }
 }
 
@@ -726,7 +740,7 @@ async function loadCasesWorkspace() {
       await loadSelectedCaseDetail(firstCaseId);
     }
   } catch (err) {
-    console.error('CASES WORKSPACE GREŠKA:', err);
+    logError('CASES_WORKSPACE', err);
   }
 }
 
@@ -742,7 +756,7 @@ async function getCaseHeader(caseId) {
     if (error) throw error;
     if (data) return data;
   } catch (err) {
-    console.warn('HEADER VIEW GREŠKA:', err);
+    logError('HEADER_VIEW', err);
   }
 
   return currentCases.find(x => String(x.id || x.case_id) === String(caseId)) || null;
@@ -759,7 +773,7 @@ async function getCaseDeadlines(caseId) {
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.warn('DEADLINES GREŠKA:', err);
+    logError('DEADLINES', err);
     return [];
   }
 }
@@ -775,7 +789,7 @@ async function getCaseEvents(caseId) {
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.warn('EVENTS GREŠKA:', err);
+    logError('EVENTS', err);
     return [];
   }
 }
@@ -791,7 +805,7 @@ async function getCaseDocuments(caseId) {
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.warn('DOCS GREŠKA:', err);
+    logError('DOCS', err);
     return [];
   }
 }
@@ -1120,7 +1134,7 @@ async function handleNewEventSubmit(e) {
       closeModal();
     }, 700);
   } catch (err) {
-    console.error('NEW EVENT GREŠKA:', err);
+    logError('NEW_EVENT', err);
     showNotice(notice, 'error', getErrorMessage(err));
   } finally {
     saveBtn.disabled = false;
@@ -1168,7 +1182,7 @@ async function handleNewDeadlineSubmit(e) {
       closeModal();
     }, 700);
   } catch (err) {
-    console.error('NEW DEADLINE GREŠKA:', err);
+    logError('NEW_DEADLINE', err);
     showNotice(notice, 'error', getErrorMessage(err));
   } finally {
     saveBtn.disabled = false;
@@ -1187,7 +1201,7 @@ async function loadSelectedCaseDetail(caseId) {
 
     renderCaseDetail(header, deadlines, events, docs);
   } catch (err) {
-    console.error('DETAIL GREŠKA:', err);
+    logError('DETAIL', err);
   }
 }
 
