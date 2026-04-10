@@ -31,9 +31,72 @@ const DEADLINE_TYPE_OPTIONS = [
 
 const DEADLINE_STATUS_OPTIONS = ['open', 'done', 'cancelled', 'expired'];
 
+const CASE_STATUS_OPTIONS = [
+  'prijem',
+  'aktivan',
+  'obustava',
+  'zatvoren',
+  'arhiviran'
+];
+
+const CASE_PRIORITY_OPTIONS = [
+  'normal',
+  'high',
+  'urgent'
+];
+
+const DOCUMENT_BASIS_TYPE_OPTIONS = [
+  'izvrsna_isprava',
+  'verodostojna_isprava',
+  'drugo'
+];
+
 let currentCases = [];
 let currentSelectedCaseId = null;
 let currentSelectedCaseHeader = null;
+
+// Profil prijavljenog korisnika — učitava se jednom pri startu
+let _currentProfile = null;
+
+async function loadCurrentProfile() {
+  try {
+    const { data: { user }, error: authError } = await db.auth.getUser();
+    if (authError || !user) return null;
+
+    // Pokušaj da nađeš profil po user_id u tabeli profiles (ili tenants/users)
+    // Ako tabela ima drugačije ime, promeni 'profiles' → tačno ime tabele
+    const { data, error } = await db
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      // Fallback: ako nema profiles tabele, uzmi tenant_id iz user metadata
+      logError('LOAD_PROFILE', error);
+      _currentProfile = {
+        id: user.id,
+        tenant_id: user.user_metadata?.tenant_id || null,
+        role: user.user_metadata?.role || null,
+        email: user.email
+      };
+      return _currentProfile;
+    }
+
+    _currentProfile = data || {
+      id: user.id,
+      tenant_id: null,
+      role: null,
+      email: user.email
+    };
+
+    return _currentProfile;
+  } catch (err) {
+    logError('LOAD_PROFILE', err);
+    return null;
+  }
+}
 
 function formatNumber(value) {
   return new Intl.NumberFormat('sr-RS').format(Number(value || 0));
@@ -108,6 +171,18 @@ function getErrorMessage(err) {
 
   if (msg.toLowerCase().includes('case_deadlines_status_check')) {
     return 'Izaberi dozvoljeni status iz liste.';
+  }
+
+  if (msg.toLowerCase().includes('cases_document_basis_type_check')) {
+    return 'Izaberi dozvoljeni tip isprave iz liste.';
+  }
+
+  if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+    return 'Predmet sa ovim brojem već postoji.';
+  }
+
+  if (msg.toLowerCase().includes('tenant')) {
+    return 'Greška pri određivanju tenanta. Kontaktirajte administratora.';
   }
 
   return msg;
@@ -609,6 +684,269 @@ function wireCasesToolbar() {
     });
   }
 }
+
+// ─── NEW CASE BUTTON ───────────────────────────────────────────────────────────
+
+function wireNewCaseButton() {
+  // Traži dugme u celom dokumentu — može biti u header, topbar ili sidebar
+  const btn = document.getElementById('btn-new-case') ||
+    document.querySelector('[data-action="new-case"]') ||
+    Array.from(document.querySelectorAll('button')).find(
+      el => el.textContent.trim().toLowerCase().includes('novi predmet')
+    );
+
+  if (!btn) {
+    logError('NEW_CASE_BTN', new Error('btn-new-case nije pronađen u DOM-u'));
+    return;
+  }
+
+  // Ukloni stari listener ako postoji (sprečava dupliranje pri ponovnom pozivu)
+  const fresh = btn.cloneNode(true);
+  btn.parentNode.replaceChild(fresh, btn);
+
+  fresh.addEventListener('click', () => openNewCaseModal());
+}
+
+function openNewCaseModal() {
+  if (!_currentProfile) {
+    alert('Profil korisnika nije učitan. Osveži stranicu.');
+    return;
+  }
+
+  if (!_currentProfile.tenant_id) {
+    alert('Tenant nije postavljen u profilu korisnika. Kontaktirajte administratora.');
+    return;
+  }
+
+  closeModal();
+
+  const modal = document.createElement('div');
+  modal.id = 'global-modal';
+  modal.className = 'modal-backdrop';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3>Novi predmet</h3>
+          <p class="muted">Unesi podatke o novom predmetu</p>
+        </div>
+        <button id="modal-close" class="btn btn-secondary">Zatvori</button>
+      </div>
+
+      <form id="new-case-form">
+        <div class="modal-grid">
+
+          <div class="field">
+            <label for="nc-case-number">Broj predmeta *</label>
+            <input
+              id="nc-case-number"
+              name="case_number"
+              class="input"
+              type="text"
+              placeholder="npr. IV-123/2024"
+              required
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="nc-status">Status</label>
+            <select id="nc-status" name="status" class="select">
+              ${CASE_STATUS_OPTIONS.map(v => `<option value="${v}" ${v === 'prijem' ? 'selected' : ''}>${v}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="nc-title">Naziv / predmet</label>
+            <input
+              id="nc-title"
+              name="title"
+              class="input"
+              type="text"
+              placeholder="Kratki naziv predmeta"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="nc-court-number">Sudska oznaka</label>
+            <input
+              id="nc-court-number"
+              name="court_case_number"
+              class="input"
+              type="text"
+              placeholder="npr. Iv 12/2024"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="nc-priority">Prioritet</label>
+            <select id="nc-priority" name="priority_level" class="select">
+              ${CASE_PRIORITY_OPTIONS.map(v => `<option value="${v}" ${v === 'normal' ? 'selected' : ''}>${v}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="nc-claim-amount">Iznos potraživanja (RSD)</label>
+            <input
+              id="nc-claim-amount"
+              name="claim_amount"
+              class="input"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div class="field">
+            <label for="nc-basis-type">Tip isprave</label>
+            <select id="nc-basis-type" name="document_basis_type" class="select">
+              <option value="">— nije odabrano —</option>
+              ${DOCUMENT_BASIS_TYPE_OPTIONS.map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="nc-received-at">Datum prijema</label>
+            <input
+              id="nc-received-at"
+              name="received_at"
+              class="input"
+              type="date"
+            />
+          </div>
+
+          <div class="field full">
+            <label for="nc-note">Napomena</label>
+            <textarea
+              id="nc-note"
+              name="note"
+              class="textarea"
+              placeholder="Opcionalna napomena"
+            ></textarea>
+          </div>
+
+        </div>
+
+        <div id="new-case-notice"></div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancel-case-btn" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" id="save-case-btn" class="btn btn-primary">Kreiraj predmet</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Postavi danas kao default datum prijema
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('nc-received-at').value = today;
+
+  document.getElementById('modal-close')?.addEventListener('click', closeModal);
+  document.getElementById('cancel-case-btn')?.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.getElementById('new-case-form')?.addEventListener('submit', handleNewCaseSubmit);
+
+  // Fokus na prvi input
+  document.getElementById('nc-case-number')?.focus();
+}
+
+async function handleNewCaseSubmit(e) {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const notice = document.getElementById('new-case-notice');
+  const saveBtn = document.getElementById('save-case-btn');
+
+  // Validacija
+  const caseNumber = form.case_number.value.trim();
+  if (!caseNumber) {
+    showNotice(notice, 'error', 'Broj predmeta je obavezan.');
+    document.getElementById('nc-case-number')?.focus();
+    return;
+  }
+
+  // tenant_id dolazi ISKLJUČIVO iz profila — nikad sa frontenda
+  const tenantId = _currentProfile?.tenant_id;
+  if (!tenantId) {
+    showNotice(notice, 'error', 'Tenant nije određen. Kontaktirajte administratora.');
+    return;
+  }
+
+  const status = form.status.value || 'prijem';
+  const title = form.title.value.trim() || null;
+  const courtCaseNumber = form.court_case_number.value.trim() || null;
+  const priorityLevel = form.priority_level.value || 'normal';
+  const claimAmountRaw = form.claim_amount.value;
+  const claimAmount = claimAmountRaw !== '' ? parseFloat(claimAmountRaw) : null;
+  const documentBasisType = form.document_basis_type.value || null;
+  const receivedAt = form.received_at.value || null;
+  const note = form.note.value.trim() || null;
+
+  const payload = {
+    tenant_id: tenantId,
+    case_number: caseNumber,
+    status,
+    priority_level: priorityLevel,
+    ...(title !== null && { title }),
+    ...(courtCaseNumber !== null && { court_case_number: courtCaseNumber }),
+    ...(claimAmount !== null && { claim_amount: claimAmount }),
+    ...(documentBasisType !== null && { document_basis_type: documentBasisType }),
+    ...(receivedAt !== null && { received_at: receivedAt }),
+    ...(note !== null && { note })
+  };
+
+  try {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Kreiranje...';
+
+    const { data, error } = await db
+      .from('cases')
+      .insert([payload])
+      .select('id, case_number')
+      .single();
+
+    if (error) throw error;
+
+    showNotice(notice, 'success', `Predmet ${data.case_number} je uspešno kreiran.`);
+
+    // Refresh liste i selektuj novi predmet
+    const newCaseId = data.id;
+
+    await loadCasesWorkspace();
+
+    if (newCaseId) {
+      currentSelectedCaseId = String(newCaseId);
+      renderCasesList(getFilteredCases());
+      await loadSelectedCaseDetail(newCaseId);
+
+      document.getElementById('cases-workspace')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+    await loadDashboard();
+
+    setTimeout(() => closeModal(), 900);
+  } catch (err) {
+    logError('NEW_CASE', err);
+    showNotice(notice, 'error', getErrorMessage(err));
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Kreiraj predmet';
+  }
+}
+
+// ─── END NEW CASE ──────────────────────────────────────────────────────────────
 
 async function loadDashboard() {
   try {
@@ -1209,6 +1547,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   injectEnhancements();
   ensureCasesWorkspace();
   wireSidebarNavigation();
+
+  // Učitaj profil prijavljenog korisnika PRVO — tenant_id je potreban za kreiranje predmeta
+  await loadCurrentProfile();
+
+  // Wire dugme Novi predmet nakon što je DOM spreman
+  wireNewCaseButton();
+
   await loadDashboard();
   await loadCasesWorkspace();
 });
