@@ -1,0 +1,16 @@
+# Environment variables - NIKAD ne commit-ovati prave kljuceve
+.env
+.env.local
+.env.production
+.env.development
+
+# Vercel
+.vercel
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
