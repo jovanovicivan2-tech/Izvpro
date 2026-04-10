@@ -9,6 +9,7 @@ const DEMO_CASE_ID = '35a1038f-dd21-4b2a-b32e-d819f31e4211';
 
 let currentCases = [];
 let currentSelectedCaseId = null;
+let currentSelectedCaseHeader = null;
 
 function formatNumber(value) {
   return new Intl.NumberFormat('sr-RS').format(Number(value || 0));
@@ -69,9 +70,7 @@ function injectEnhancements() {
   const style = document.createElement('style');
   style.id = 'izvpro-enhancements';
   style.textContent = `
-    .section-anchor {
-      scroll-margin-top: 24px;
-    }
+    .section-anchor { scroll-margin-top: 24px; }
 
     .cases-shell {
       display: grid;
@@ -79,7 +78,8 @@ function injectEnhancements() {
       gap: 16px;
     }
 
-    .cases-panel {
+    .cases-panel,
+    .modal-card {
       background: #fff;
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -93,7 +93,9 @@ function injectEnhancements() {
       flex-wrap: wrap;
     }
 
-    .input, .select {
+    .input,
+    .select,
+    .textarea {
       border: 1px solid var(--border);
       background: white;
       border-radius: 12px;
@@ -101,16 +103,16 @@ function injectEnhancements() {
       font: inherit;
       color: var(--text);
       min-height: 44px;
+      width: 100%;
     }
 
-    .input {
-      flex: 1;
-      min-width: 220px;
+    .textarea {
+      min-height: 120px;
+      resize: vertical;
     }
 
-    .select {
-      min-width: 180px;
-    }
+    .input { flex: 1; min-width: 220px; }
+    .select { min-width: 180px; }
 
     .cases-list {
       display: grid;
@@ -198,13 +200,9 @@ function injectEnhancements() {
       letter-spacing: .04em;
     }
 
-    .detail-box p {
-      font-size: 14px;
-    }
+    .detail-box p { font-size: 14px; }
 
-    .detail-section {
-      margin-top: 16px;
-    }
+    .detail-section { margin-top: 16px; }
 
     .detail-section h4 {
       margin-bottom: 10px;
@@ -216,7 +214,9 @@ function injectEnhancements() {
       gap: 10px;
     }
 
-    .timeline-item, .doc-item, .deadline-item {
+    .timeline-item,
+    .doc-item,
+    .deadline-item {
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 12px 14px;
@@ -256,23 +256,93 @@ function injectEnhancements() {
       letter-spacing: .04em;
     }
 
-    .clickable-row {
-      cursor: pointer;
+    .clickable-row { cursor: pointer; }
+    .clickable-row:hover td { background: #faf9f6; }
+
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
     }
 
-    .clickable-row:hover td {
-      background: #faf9f6;
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 20, 18, 0.38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9999;
+    }
+
+    .modal-card {
+      width: min(680px, 100%);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .notice {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    .notice.success {
+      background: #dce8d7;
+      color: var(--success);
+    }
+
+    .notice.error {
+      background: #f3dde2;
+      color: var(--danger);
     }
 
     @media (max-width: 980px) {
       .cases-shell,
-      .detail-grid {
+      .detail-grid,
+      .modal-grid {
         grid-template-columns: 1fr;
       }
 
-      .cases-list {
-        max-height: none;
-      }
+      .cases-list { max-height: none; }
     }
   `;
   document.head.appendChild(style);
@@ -298,9 +368,9 @@ function wireSidebarNavigation() {
 
   links.forEach((link) => {
     const label = link.textContent.trim();
+
     link.addEventListener('click', (e) => {
       e.preventDefault();
-
       document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
       link.classList.add('active');
 
@@ -365,9 +435,7 @@ function renderCasesList(items) {
   const pill = document.getElementById('cases-count-pill');
   if (!list) return;
 
-  if (pill) {
-    pill.textContent = `${formatNumber(items.length)} predmeta`;
-  }
+  if (pill) pill.textContent = `${formatNumber(items.length)} predmeta`;
 
   if (!items.length) {
     list.innerHTML = `<div class="empty-note">Nema pronađenih predmeta za izabrani filter.</div>`;
@@ -422,10 +490,7 @@ function getFilteredCases() {
     const overdue = Number(item.deadlines_overdue || 0);
 
     const matchesQuery =
-      !q ||
-      number.includes(q) ||
-      title.includes(q) ||
-      status.includes(q);
+      !q || number.includes(q) || title.includes(q) || status.includes(q);
 
     let matchesFilter = true;
 
@@ -446,9 +511,7 @@ function getFilteredCases() {
 
     if (filter === 'urgent') {
       matchesFilter =
-        overdue > 0 ||
-        urgentScore >= 8 ||
-        status.includes('hit');
+        overdue > 0 || urgentScore >= 8 || status.includes('hit');
     }
 
     return matchesQuery && matchesFilter;
@@ -507,7 +570,6 @@ async function loadDashboard() {
     const docsCount = documentsCount || 0;
 
     const cards = document.querySelectorAll('.kpis .card');
-
     const totalCasesCard = cards[0];
     const openDeadlinesCard = cards[1];
     const documentsCard = cards[2];
@@ -537,8 +599,7 @@ async function loadDashboard() {
 
     if (documentsCard) {
       documentsCard.querySelector('.metric').textContent = formatNumber(docsCount);
-      documentsCard.querySelector('.meta').textContent =
-        'Ukupan broj dokumenata u sistemu';
+      documentsCard.querySelector('.meta').textContent = 'Ukupan broj dokumenata u sistemu';
     }
 
     if (urgentCasesCard) {
@@ -576,11 +637,14 @@ async function loadDashboard() {
         row.addEventListener('click', async () => {
           const caseId = row.getAttribute('data-case-id');
           if (!caseId) return;
+
           currentSelectedCaseId = caseId;
+
           const casesSection = document.getElementById('cases-workspace');
           if (casesSection) {
             casesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
+
           renderCasesList(getFilteredCases());
           await loadSelectedCaseDetail(caseId);
         });
@@ -635,10 +699,16 @@ async function getCaseHeader(caseId) {
       .select('*')
       .eq('id', caseId)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
-    return data;
+    if (data) return data;
+
+    const fallback = currentCases.find(
+      x => String(x.id || x.case_id) === String(caseId)
+    );
+
+    return fallback || null;
   } catch (err) {
     console.warn('HEADER fallback:', err);
 
@@ -704,13 +774,14 @@ function renderCaseDetail(header, deadlines, events, docs) {
 
   if (!content) return;
 
+  currentSelectedCaseHeader = header || null;
+
   if (!header) {
     if (pill) pill.textContent = 'Nije pronađeno';
     content.innerHTML = `<div class="empty-note">Detalj predmeta nije pronađen.</div>`;
     return;
   }
 
-  const caseId = header.id || header.case_id || '';
   const caseNumber = header.case_number || header.number || '-';
   const title = header.title || header.subject || header.case_title || '-';
   const status = header.status || header.case_status || 'Aktivan';
@@ -813,9 +884,9 @@ function renderCaseDetail(header, deadlines, events, docs) {
       }
     </div>
 
-    <div class="detail-section">
-      <button id="btn-new-event" class="btn btn-secondary">Novi događaj</button>
-      <button id="btn-new-deadline" class="btn btn-primary">Novi rok</button>
+    <div class="detail-actions">
+      <button id="btn-new-event" class="btn btn-primary">Novi događaj</button>
+      <button id="btn-new-deadline" class="btn btn-secondary">Novi rok</button>
     </div>
   `;
 
@@ -824,7 +895,7 @@ function renderCaseDetail(header, deadlines, events, docs) {
 
   if (btnNewEvent) {
     btnNewEvent.addEventListener('click', () => {
-      alert(`Sledeći korak: forma za novi događaj za predmet ${caseNumber}`);
+      openNewEventModal();
     });
   }
 
@@ -832,6 +903,152 @@ function renderCaseDetail(header, deadlines, events, docs) {
     btnNewDeadline.addEventListener('click', () => {
       alert(`Sledeći korak: forma za novi rok za predmet ${caseNumber}`);
     });
+  }
+}
+
+function closeModal() {
+  const existing = document.getElementById('global-modal');
+  if (existing) existing.remove();
+}
+
+function showNotice(container, type, message) {
+  if (!container) return;
+  container.innerHTML = `<div class="notice ${type}">${message}</div>`;
+}
+
+function openNewEventModal() {
+  if (!currentSelectedCaseId || !currentSelectedCaseHeader) {
+    alert('Prvo izaberi predmet.');
+    return;
+  }
+
+  closeModal();
+
+  const caseNumber = currentSelectedCaseHeader.case_number || currentSelectedCaseHeader.number || '-';
+
+  const modal = document.createElement('div');
+  modal.id = 'global-modal';
+  modal.className = 'modal-backdrop';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3>Novi događaj</h3>
+          <p class="muted">Predmet: ${caseNumber}</p>
+        </div>
+        <button id="modal-close" class="btn btn-secondary">Zatvori</button>
+      </div>
+
+      <form id="new-event-form">
+        <div class="modal-grid">
+          <div class="field">
+            <label for="event-type">Tip događaja</label>
+            <input id="event-type" name="event_type" class="input" type="text" placeholder="npr. Poziv, Podnesak, Odluka" required />
+          </div>
+
+          <div class="field">
+            <label for="event-date">Datum događaja</label>
+            <input id="event-date" name="event_date" class="input" type="datetime-local" required />
+          </div>
+
+          <div class="field full">
+            <label for="event-description">Opis</label>
+            <textarea id="event-description" name="description" class="textarea" placeholder="Kratak opis događaja"></textarea>
+          </div>
+        </div>
+
+        <div id="new-event-notice"></div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancel-event-btn" class="btn btn-secondary">Otkaži</button>
+          <button type="submit" id="save-event-btn" class="btn btn-primary">Sačuvaj događaj</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const now = new Date();
+  const localValue = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+
+  const eventDateInput = document.getElementById('event-date');
+  if (eventDateInput) eventDateInput.value = localValue;
+
+  document.getElementById('modal-close')?.addEventListener('click', closeModal);
+  document.getElementById('cancel-event-btn')?.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.getElementById('new-event-form')?.addEventListener('submit', handleNewEventSubmit);
+}
+
+async function handleNewEventSubmit(e) {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const notice = document.getElementById('new-event-notice');
+  const saveBtn = document.getElementById('save-event-btn');
+
+  const eventType = form.event_type.value.trim();
+  const eventDate = form.event_date.value;
+  const description = form.description.value.trim();
+
+  if (!eventType || !eventDate) {
+    showNotice(notice, 'error', 'Popuni obavezna polja.');
+    return;
+  }
+
+  const selectedCase = currentSelectedCaseHeader || {};
+  const tenantId =
+    selectedCase.tenant_id ||
+    DEMO_TENANT_ID;
+
+  const payload = {
+    tenant_id: tenantId,
+    case_id: currentSelectedCaseId,
+    event_type: eventType,
+    event_date: new Date(eventDate).toISOString(),
+    description: description || null
+  };
+
+  try {
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Čuvanje...';
+    }
+
+    const { error } = await db
+      .from('case_events')
+      .insert(payload)
+      .select();
+
+    if (error) throw error;
+
+    showNotice(notice, 'success', 'Događaj je uspešno sačuvan.');
+
+    await loadSelectedCaseDetail(currentSelectedCaseId);
+    await loadDashboard();
+
+    setTimeout(() => {
+      closeModal();
+    }, 700);
+  } catch (err) {
+    console.error('NEW EVENT GREŠKA:', err);
+    showNotice(
+      notice,
+      'error',
+      `Greška pri upisu događaja: ${err.message || 'Nepoznata greška'}`
+    );
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Sačuvaj događaj';
+    }
   }
 }
 
@@ -852,19 +1069,13 @@ async function loadSelectedCaseDetail(caseId) {
 
 async function loadDemoCaseDetail() {
   try {
-    const [header, deadlines, events, docs] = await Promise.all([
-      db.from('v_case_detail_header').select('*').eq('tenant_id', DEMO_TENANT_ID).eq('id', DEMO_CASE_ID).limit(1).single(),
-      db.from('case_deadlines').select('*').eq('tenant_id', DEMO_TENANT_ID).eq('case_id', DEMO_CASE_ID).order('due_date', { ascending: true }),
-      db.from('v_case_events_timeline').select('*').eq('case_id', DEMO_CASE_ID).order('event_date', { ascending: false }),
-      db.from('v_case_documents_list').select('*').eq('case_id', DEMO_CASE_ID).order('uploaded_at', { ascending: false })
-    ]);
-
-    if (!header.error && header.data && !currentSelectedCaseId) {
-      currentSelectedCaseId = DEMO_CASE_ID;
-    }
-
-    console.log('DEMO DETAIL READY');
-    console.log(header, deadlines, events, docs);
+    await db
+      .from('v_case_detail_header')
+      .select('*')
+      .eq('tenant_id', DEMO_TENANT_ID)
+      .eq('id', DEMO_CASE_ID)
+      .limit(1)
+      .maybeSingle();
   } catch (err) {
     console.warn('DEMO DETAIL INFO:', err);
   }
