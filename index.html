@@ -575,6 +575,14 @@
     </div>
   </div>
 
+  <!-- ── ENV CONFIG: mora biti PRVI script, pre svega ostalog ── -->
+  <script>
+    window.__env = {
+      SUPABASE_URL: "https://bwpyivqdinemhfrrjdhu.supabase.co",
+      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k"
+    };
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   // ── AUTH GATE ──────────────────────────────────────────────────────────────
@@ -644,7 +652,6 @@
       const profile = await loadProfile(user.id);
 
       if (!profile) {
-        // Korisnik postoji u auth ali nema profiles red
         noProfile.classList.add('visible');
         await sb.auth.signOut();
         showLogin();
@@ -661,7 +668,6 @@
       applyProfileToUI(profile);
       showApp();
 
-      // Signal app.js da je profil spreman
       document.dispatchEvent(new CustomEvent('izvpro:ready', { detail: { user, profile } }));
     }
 
