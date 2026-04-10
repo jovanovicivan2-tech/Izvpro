@@ -1003,13 +1003,7 @@ async function handleNewEventSubmit(e) {
     return;
   }
 
-  const selectedCase = currentSelectedCaseHeader || {};
-  const tenantId =
-    selectedCase.tenant_id ||
-    DEMO_TENANT_ID;
-
   const payload = {
-    tenant_id: tenantId,
     case_id: currentSelectedCaseId,
     event_type: eventType,
     event_date: new Date(eventDate).toISOString(),
