@@ -10,6 +10,20 @@ const RPC = {
   changeStatus: 'change_case_status'
 };
 
+const DEADLINE_TYPE_OPTIONS = [
+  'opsti_rok',
+  'prigovor',
+  'dostava',
+  'predujam',
+  'zakljucak',
+  'namirenje',
+  'arhiviranje',
+  'odluka_po_predlogu',
+  'unos_u_evidenciju'
+];
+
+const DEADLINE_STATUS_OPTIONS = ['open', 'done', 'cancelled', 'expired'];
+
 let currentCases = [];
 let currentSelectedCaseId = null;
 let currentSelectedCaseHeader = null;
@@ -48,7 +62,8 @@ function statusClass(status) {
     s.includes('hitno') ||
     s.includes('urgent') ||
     s.includes('kasni') ||
-    s.includes('overdue')
+    s.includes('overdue') ||
+    s === 'expired'
   ) return 'danger';
 
   if (
@@ -74,6 +89,18 @@ function getErrorMessage(err) {
 
   if (msg.toLowerCase().includes('function') && msg.toLowerCase().includes('does not exist')) {
     return 'Tražena Supabase funkcija još nije napravljena. Prvo unesi SQL funkciju u Supabase.';
+  }
+
+  if (msg.toLowerCase().includes('uq_case_deadlines_open_unique')) {
+    return 'Za ovaj predmet već postoji otvoren rok istog tipa.';
+  }
+
+  if (msg.toLowerCase().includes('case_deadlines_deadline_type_check')) {
+    return 'Izaberi dozvoljeni tip roka iz liste.';
+  }
+
+  if (msg.toLowerCase().includes('case_deadlines_status_check')) {
+    return 'Izaberi dozvoljeni status iz liste.';
   }
 
   return msg;
@@ -1005,7 +1032,9 @@ function openNewDeadlineModal() {
 
           <div class="field">
             <label for="deadline-type">Tip roka</label>
-            <input id="deadline-type" name="deadline_type" class="input" type="text" placeholder="npr. podnesak, žalba, dopuna" required />
+            <select id="deadline-type" name="deadline_type" class="select" required>
+              ${DEADLINE_TYPE_OPTIONS.map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
           </div>
 
           <div class="field">
@@ -1015,7 +1044,9 @@ function openNewDeadlineModal() {
 
           <div class="field">
             <label for="deadline-status">Status</label>
-            <input id="deadline-status" name="status" class="input" type="text" placeholder="npr. otvoren" />
+            <select id="deadline-status" name="status" class="select">
+              ${DEADLINE_STATUS_OPTIONS.map(v => `<option value="${v}" ${v === 'open' ? 'selected' : ''}>${v}</option>`).join('')}
+            </select>
           </div>
 
           <div class="field full">
@@ -1164,7 +1195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   injectEnhancements();
   ensureCasesWorkspace();
   wireSidebarNavigation();
-
   await loadDashboard();
   await loadCasesWorkspace();
 });
