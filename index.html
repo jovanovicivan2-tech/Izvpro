@@ -587,7 +587,7 @@
   <script>
   // ── AUTH GATE ──────────────────────────────────────────────────────────────
   (function () {
-    const SUPABASE_URL = window.__env?.SUPABASE_URL || '';
+    const SUPABASE_URL     = window.__env?.SUPABASE_URL     || '';
     const SUPABASE_ANON_KEY = window.__env?.SUPABASE_ANON_KEY || '';
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -597,7 +597,7 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Expose globally so app.js can reuse
+    // Expose globally so app.js can reuse the same instance
     window._sb = sb;
     window._currentProfile = null;
 
@@ -629,15 +629,21 @@
       noProfile.classList.remove('visible');
     }
 
+    // FIX 1: .maybeSingle() umesto .single()
+    // .single() baca PGRST116 error ako dobije 0 redova — maskira pravi razlog.
+    // .maybeSingle() vraca null za 0 redova bez errora, error samo za stvarne greske.
     async function loadProfile(userId) {
       const { data, error } = await sb
         .from('profiles')
         .select('id, full_name, email, role, tenant_id, is_active')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) return null;
-      return data;
+      if (error) {
+        console.error('[IZVPRO][loadProfile] query error:', error.code, error.message);
+        return null;
+      }
+      return data; // null ako profil ne postoji, object ako postoji
     }
 
     function applyProfileToUI(profile) {
@@ -645,7 +651,9 @@
       const nameEl = document.getElementById('sidebar-user-name');
       const roleEl = document.getElementById('sidebar-user-role');
       if (nameEl) nameEl.textContent = profile.full_name || profile.email || 'Korisnik';
-      if (roleEl) roleEl.textContent = profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : '—';
+      if (roleEl) roleEl.textContent = profile.role
+        ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+        : '—';
     }
 
     async function handleSessionUser(user) {
@@ -671,18 +679,25 @@
       document.dispatchEvent(new CustomEvent('izvpro:ready', { detail: { user, profile } }));
     }
 
-    // ── INITIAL SESSION CHECK ──────────────────────
-    sb.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        await handleSessionUser(session.user);
-      } else {
-        showLogin();
-      }
-    });
-
-    // ── AUTH STATE LISTENER ────────────────────────
+    // FIX 2: Uklonjen getSession().then() blok.
+    // getSession() + onAuthStateChange su stvarali dupli poziv handleSessionUser:
+    //   - getSession() okidao handleSessionUser(user) → loadProfile pada → signOut()
+    //   - signOut() okida SIGNED_OUT event → showLogin()
+    //   - Paralelno, onAuthStateChange(SIGNED_IN) okida handleSessionUser(user) drugi put
+    //   - U race window-u token nije bio stabilan za RLS — query vracao 0 redova
+    //
+    // onAuthStateChange jedini ulazni punkt:
+    //   - INITIAL_SESSION pokrives restored sesiju (bio zadatak getSession)
+    //   - SIGNED_IN pokrives novi login
+    //   - SIGNED_OUT pokrives logout
     sb.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          await handleSessionUser(session.user);
+        } else {
+          showLogin();
+        }
+      } else if (event === 'SIGNED_IN' && session?.user) {
         await handleSessionUser(session.user);
       } else if (event === 'SIGNED_OUT') {
         window._currentProfile = null;
@@ -712,7 +727,7 @@
         loginBtn.disabled = false;
         loginBtn.textContent = 'Prijavi se';
       }
-      // onAuthStateChange handles the rest
+      // onAuthStateChange(SIGNED_IN) nastavlja flow od ovde
     });
 
     // ── LOGOUT ─────────────────────────────────────
