@@ -655,20 +655,18 @@
     async function loadProfile(userId) {
       dbg('loadProfile pozvan za userId: ' + userId);
 
-      const { data, error } = await sb
-        .from('profiles')
-        .select('id, full_name, email, role, tenant_id, is_active')
-        .eq('id', userId)
-        .maybeSingle();
+      // Privremeno - hardcoded profil da testiramo ulaz u aplikaciju
+      const fakeProfile = {
+        id: userId,
+        full_name: 'Ivan Jovanovic',
+        email: 'jovanovicivan2@gmail.com',
+        role: 'admin',
+        is_active: true,
+        tenant_id: '15fa7946-5740-4855-ae28-21355328beeb'
+      };
 
-      dbg('data: ' + JSON.stringify(data));
-      dbg('error: ' + JSON.stringify(error));
-
-      if (error) {
-        dbg('GRESKA u loadProfile: ' + error.message);
-        return null;
-      }
-      return data;
+      dbg('Koristim test profil — ulazim');
+      return fakeProfile;
     }
 
     function applyProfileToUI(profile) {
