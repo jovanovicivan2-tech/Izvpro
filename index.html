@@ -388,7 +388,6 @@
       font-weight: 600;
     }
 
-    /* loading skeleton */
     .skeleton {
       background: linear-gradient(90deg, #ece8e0 25%, #f3efe8 50%, #ece8e0 75%);
       background-size: 200% 100%;
@@ -397,6 +396,24 @@
       display: inline-block;
     }
     @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+    /* ── DEBUG BOX ── */
+    #debug-box {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: #1a1a1a;
+      color: #00ff88;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      max-width: 400px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+    }
 
     @media (max-width: 980px) {
       .app { grid-template-columns: 1fr; }
@@ -407,6 +424,9 @@
   </style>
 </head>
 <body>
+
+  <!-- ── DEBUG BOX ── -->
+  <div id="debug-box"></div>
 
   <!-- ── LOGIN SCREEN ───────────────────────────── -->
   <div id="login-screen">
@@ -457,7 +477,7 @@
     </div>
   </div>
 
-  <!-- ── APP SHELL (hidden until session confirmed) ─ -->
+  <!-- ── APP SHELL ─ -->
   <div id="app-shell">
     <div class="app">
       <aside class="sidebar">
@@ -575,29 +595,32 @@
     </div>
   </div>
 
-  <!-- ── ENV CONFIG: mora biti PRVI script, pre svega ostalog ── -->
   <script>
     window.__env = {
       SUPABASE_URL: "https://bwpyivqdinemhfrrjdhu.supabase.co",
       SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k"
     };
+
+    // ── DEBUG HELPER ──
+    function dbg(msg) {
+      const box = document.getElementById('debug-box');
+      if (!box) return;
+      box.style.display = 'block';
+      box.innerHTML += '<div>' + new Date().toLocaleTimeString() + ' — ' + msg + '</div>';
+      box.scrollTop = box.scrollHeight;
+    }
+    window.dbg = dbg;
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-  // ── AUTH GATE ──────────────────────────────────────────────────────────────
   (function () {
-    const SUPABASE_URL     = window.__env?.SUPABASE_URL     || '';
+    const SUPABASE_URL      = window.__env?.SUPABASE_URL     || '';
     const SUPABASE_ANON_KEY = window.__env?.SUPABASE_ANON_KEY || '';
-
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      console.error('[IZVPRO] SUPABASE_URL ili SUPABASE_ANON_KEY nisu postavljeni u window.__env');
-    }
 
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Expose globally so app.js can reuse the same instance
     window._sb = sb;
     window._currentProfile = null;
 
@@ -629,21 +652,23 @@
       noProfile.classList.remove('visible');
     }
 
-    // FIX 1: .maybeSingle() umesto .single()
-    // .single() baca PGRST116 error ako dobije 0 redova — maskira pravi razlog.
-    // .maybeSingle() vraca null za 0 redova bez errora, error samo za stvarne greske.
     async function loadProfile(userId) {
+      dbg('loadProfile pozvan za userId: ' + userId);
+
       const { data, error } = await sb
         .from('profiles')
         .select('id, full_name, email, role, tenant_id, is_active')
         .eq('id', userId)
         .maybeSingle();
 
+      dbg('data: ' + JSON.stringify(data));
+      dbg('error: ' + JSON.stringify(error));
+
       if (error) {
-        console.error('[IZVPRO][loadProfile] query error:', error.code, error.message);
+        dbg('GRESKA u loadProfile: ' + error.message);
         return null;
       }
-      return data; // null ako profil ne postoji, object ako postoji
+      return data;
     }
 
     function applyProfileToUI(profile) {
@@ -657,9 +682,11 @@
     }
 
     async function handleSessionUser(user) {
+      dbg('handleSessionUser: ' + user.id);
       const profile = await loadProfile(user.id);
 
       if (!profile) {
+        dbg('Profil nije pronadjen — odjavljujem');
         noProfile.classList.add('visible');
         await sb.auth.signOut();
         showLogin();
@@ -667,30 +694,21 @@
       }
 
       if (!profile.is_active) {
+        dbg('Profil nije aktivan');
         showError('Vaš nalog je deaktiviran. Obratite se administratoru.');
         await sb.auth.signOut();
         showLogin();
         return;
       }
 
+      dbg('Profil OK — ulazim u app');
       applyProfileToUI(profile);
       showApp();
-
       document.dispatchEvent(new CustomEvent('izvpro:ready', { detail: { user, profile } }));
     }
 
-    // FIX 2: Uklonjen getSession().then() blok.
-    // getSession() + onAuthStateChange su stvarali dupli poziv handleSessionUser:
-    //   - getSession() okidao handleSessionUser(user) → loadProfile pada → signOut()
-    //   - signOut() okida SIGNED_OUT event → showLogin()
-    //   - Paralelno, onAuthStateChange(SIGNED_IN) okida handleSessionUser(user) drugi put
-    //   - U race window-u token nije bio stabilan za RLS — query vracao 0 redova
-    //
-    // onAuthStateChange jedini ulazni punkt:
-    //   - INITIAL_SESSION pokrives restored sesiju (bio zadatak getSession)
-    //   - SIGNED_IN pokrives novi login
-    //   - SIGNED_OUT pokrives logout
     sb.auth.onAuthStateChange(async (event, session) => {
+      dbg('authEvent: ' + event);
       if (event === 'INITIAL_SESSION') {
         if (session?.user) {
           await handleSessionUser(session.user);
@@ -705,7 +723,6 @@
       }
     });
 
-    // ── LOGIN FORM SUBMIT ──────────────────────────
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       clearError();
@@ -715,9 +732,12 @@
       const email    = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
 
+      dbg('Pokusaj prijave: ' + email);
+
       const { error } = await sb.auth.signInWithPassword({ email, password });
 
       if (error) {
+        dbg('Auth greska: ' + error.message);
         const msg = error.message.includes('Invalid login')
           ? 'Pogrešan e-mail ili lozinka.'
           : error.message.includes('Email not confirmed')
@@ -727,10 +747,8 @@
         loginBtn.disabled = false;
         loginBtn.textContent = 'Prijavi se';
       }
-      // onAuthStateChange(SIGNED_IN) nastavlja flow od ovde
     });
 
-    // ── LOGOUT ─────────────────────────────────────
     if (btnLogout) {
       btnLogout.addEventListener('click', async () => {
         await sb.auth.signOut();
