@@ -32,387 +32,228 @@
       line-height: 1.5;
     }
 
-    /* ── LOGIN SCREEN ─────────────────────────────── */
     #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--bg);
     }
-
     #login-screen.hidden { display: none; }
 
     .login-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 40px 36px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: var(--shadow);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 40px 36px;
+      width: 100%; max-width: 420px; box-shadow: var(--shadow);
     }
-
-    .login-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-
+    .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
     .login-logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      background: var(--primary);
-      color: white;
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      font-size: 18px;
-      flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 14px;
+      background: var(--primary); color: white;
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 18px; flex-shrink: 0;
     }
-
     .login-brand h1 { font-size: 20px; line-height: 1.1; }
     .login-brand p { font-size: 13px; color: var(--muted); }
-
-    .login-card h2 {
-      font-size: 22px;
-      margin-bottom: 6px;
-    }
-
-    .login-card .subtitle {
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 28px;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
+    .login-card h2 { font-size: 22px; margin-bottom: 6px; }
+    .login-card .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+    .form-group { margin-bottom: 16px; }
     .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
+      display: block; font-size: 13px; font-weight: 600; color: var(--muted);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;
     }
-
     .form-group input {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 15px;
-      font-family: inherit;
-      background: var(--bg);
-      color: var(--text);
-      outline: none;
-      transition: border-color .15s;
+      width: 100%; border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-size: 15px; font-family: inherit;
+      background: var(--bg); color: var(--text); outline: none; transition: border-color .15s;
     }
-
-    .form-group input:focus {
-      border-color: var(--primary);
-      background: white;
-    }
-
+    .form-group input:focus { border-color: var(--primary); background: white; }
     .login-error {
-      background: #f3dde2;
-      color: var(--danger);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      display: none;
+      background: #f3dde2; color: var(--danger); border-radius: 10px;
+      padding: 12px 14px; font-size: 14px; margin-bottom: 16px; display: none;
     }
-
     .login-error.visible { display: block; }
-
     .btn-login {
-      width: 100%;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 999px;
-      padding: 14px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity .15s;
+      width: 100%; background: var(--primary); color: white; border: none;
+      border-radius: 999px; padding: 14px; font-size: 15px; font-weight: 600;
+      font-family: inherit; cursor: pointer; margin-top: 8px; transition: opacity .15s;
     }
-
-    .btn-login:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
     .login-no-profile {
-      background: #f4e5d7;
-      color: var(--warning);
-      border-radius: 10px;
-      padding: 14px;
-      font-size: 14px;
-      line-height: 1.5;
-      margin-top: 16px;
-      display: none;
+      background: #f4e5d7; color: var(--warning); border-radius: 10px;
+      padding: 14px; font-size: 14px; line-height: 1.5; margin-top: 16px; display: none;
     }
-
     .login-no-profile.visible { display: block; }
 
-    /* ── APP SHELL ────────────────────────────────── */
     #app-shell { display: none; }
     #app-shell.visible { display: block; }
 
-    .app {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      min-height: 100vh;
-    }
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
 
-    .sidebar {
-      background: var(--surface-2);
-      border-right: 1px solid var(--border);
-      padding: 24px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-
+    .sidebar { background: var(--surface-2); border-right: 1px solid var(--border); padding: 24px; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
     .logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: var(--primary);
-      color: white;
-      display: grid;
-      place-items: center;
-      font-weight: 700;
+      width: 42px; height: 42px; border-radius: 14px; background: var(--primary);
+      color: white; display: grid; place-items: center; font-weight: 700;
     }
-
     .brand h1 { font-size: 22px; line-height: 1.1; }
     .brand p { font-size: 13px; color: var(--muted); }
 
-    .nav {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-
+    .nav { display: grid; gap: 4px; margin-bottom: 28px; }
     .nav a {
-      text-decoration: none;
-      color: var(--text);
-      padding: 12px 14px;
-      border-radius: 12px;
-      display: block;
-      font-size: 15px;
+      text-decoration: none; color: var(--text); padding: 11px 14px;
+      border-radius: 12px; display: flex; align-items: center; gap: 10px;
+      font-size: 15px; cursor: pointer; transition: background .15s, color .15s;
     }
-
-    .nav a.active {
-      background: white;
-      color: var(--primary);
-      box-shadow: var(--shadow);
-      font-weight: 600;
-    }
+    .nav a:hover { background: rgba(15,95,104,.08); }
+    .nav a.active { background: white; color: var(--primary); box-shadow: var(--shadow); font-weight: 600; }
 
     .sidebar-user {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      margin-bottom: 12px;
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px;
     }
-
-    .sidebar-user .user-name {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .sidebar-user .user-role {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
+    .sidebar-user .user-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .sidebar-user .user-role { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
     .btn-logout {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--muted);
-      cursor: pointer;
-      transition: background .15s, color .15s;
+      width: 100%; background: transparent; border: 1px solid var(--border);
+      border-radius: 999px; padding: 8px 12px; font-size: 13px; font-family: inherit;
+      color: var(--muted); cursor: pointer; transition: background .15s, color .15s;
     }
-
     .btn-logout:hover { background: #f3dde2; color: var(--danger); border-color: #e8c5ce; }
 
     .sidebar-card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px;
     }
-
     .sidebar-card h3 { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
     .sidebar-card strong { font-size: 30px; display: block; }
 
-    .content { padding: 24px; }
+    .content { padding: 24px; overflow-y: auto; }
+    .view { display: none; }
+    .view.active { display: block; }
 
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; margin-bottom: 24px;
     }
-
-    .topbar h2 { font-size: 32px; line-height: 1.1; margin-bottom: 4px; }
+    .topbar h2 { font-size: 28px; line-height: 1.1; margin-bottom: 4px; }
     .topbar p { color: var(--muted); font-size: 15px; }
-
     .actions { display: flex; gap: 10px; }
 
     .btn {
-      border: none;
-      border-radius: 999px;
-      padding: 12px 18px;
-      font-size: 14px;
-      cursor: pointer;
+      border: none; border-radius: 999px; padding: 11px 18px; font-size: 14px;
+      font-family: inherit; cursor: pointer; transition: opacity .15s, background .15s;
     }
-
+    .btn:hover { opacity: .88; }
     .btn-secondary { background: white; border: 1px solid var(--border); color: var(--text); }
-    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary { background: var(--primary); color: white; font-weight: 600; }
 
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: var(--shadow);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
     }
-
     .card h3 { color: var(--muted); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
     .metric { font-size: 34px; font-weight: 700; }
     .meta { margin-top: 6px; color: var(--muted); font-size: 13px; }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
+    .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 16px; }
     .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      gap: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; gap: 10px;
     }
-
+    .section-head h3 { font-size: 16px; font-weight: 600; }
     .pill {
-      background: var(--primary-soft);
-      color: var(--primary);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
+      background: var(--primary-soft); color: var(--primary);
+      padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
     }
 
     .bars { display: grid; gap: 14px; }
-
-    .bar-row {
-      display: grid;
-      grid-template-columns: 120px 1fr 40px;
-      gap: 12px;
-      align-items: center;
-      font-size: 14px;
-    }
-
+    .bar-row { display: grid; grid-template-columns: 120px 1fr 40px; gap: 12px; align-items: center; font-size: 14px; }
     .bar { height: 10px; background: #e8e3db; border-radius: 999px; overflow: hidden; }
-    .bar > span { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+    .bar > span { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width .6s ease; }
 
-    .list { display: grid; gap: 12px; }
-
+    .list { display: grid; gap: 10px; }
     .list-item {
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      background: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
+      border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+      background: white; display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 12px;
     }
-
-    .list-item strong { display: block; margin-bottom: 4px; }
+    .list-item strong { display: block; margin-bottom: 4px; font-size: 14px; }
     .list-item small { color: var(--muted); font-size: 13px; }
 
-    .status {
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .danger { background: #f3dde2; color: var(--danger); }
+    .status { padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .danger  { background: #f3dde2; color: var(--danger); }
     .warning { background: #f4e5d7; color: var(--warning); }
     .success { background: #dce8d7; color: var(--success); }
+    .neutral { background: #ece8e1; color: var(--muted); }
 
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { text-align: left; padding: 14px 10px; border-bottom: 1px solid #ece7df; }
-    th {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      font-weight: 600;
+    th, td { text-align: left; padding: 13px 10px; border-bottom: 1px solid #ece7df; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+    tr:hover td { background: #faf9f6; }
+
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-bar input {
+      flex: 1; border: 1px solid var(--border); border-radius: 10px;
+      padding: 11px 14px; font-size: 14px; font-family: inherit;
+      background: white; outline: none; transition: border-color .15s;
     }
+    .search-bar input:focus { border-color: var(--primary); }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(16,24,40,.35);
+      backdrop-filter: blur(4px); display: none; align-items: center;
+      justify-content: center; z-index: 1000; padding: 16px;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      background: white; border-radius: var(--radius); padding: 32px;
+      width: 100%; max-width: 520px;
+      box-shadow: 0 20px 60px rgba(16,24,40,.15);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal h3 { font-size: 20px; margin-bottom: 20px; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .modal-grid .full { grid-column: 1 / -1; }
+    .modal .form-group label {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 6px;
+    }
+    .modal .form-group input,
+    .modal .form-group select,
+    .modal .form-group textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; font-size: 14px; font-family: inherit;
+      background: var(--bg); outline: none; transition: border-color .15s;
+    }
+    .modal .form-group input:focus,
+    .modal .form-group select:focus,
+    .modal .form-group textarea:focus { border-color: var(--primary); background: white; }
+    .modal .form-group textarea { resize: vertical; min-height: 80px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+    .modal-error {
+      background: #f3dde2; color: var(--danger); border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .modal-error.visible { display: block; }
+
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1a1a; color: white; padding: 12px 20px;
+      border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none;
+      transition: opacity .25s; z-index: 9000;
+    }
+    #toast.visible { opacity: 1; }
 
     .skeleton {
       background: linear-gradient(90deg, #ece8e0 25%, #f3efe8 50%, #ece8e0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s ease-in-out infinite;
-      border-radius: 6px;
-      display: inline-block;
+      background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite;
+      border-radius: 6px; display: inline-block;
     }
     @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 
-    /* ── DEBUG BOX ── */
     #debug-box {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      background: #1a1a1a;
-      color: #00ff88;
-      font-family: monospace;
-      font-size: 12px;
-      padding: 12px 16px;
-      border-radius: 10px;
-      max-width: 400px;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 9999;
-      display: none;
+      position: fixed; bottom: 16px; right: 16px; background: #1a1a1a; color: #00ff88;
+      font-family: monospace; font-size: 12px; padding: 12px 16px; border-radius: 10px;
+      max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none;
     }
 
     @media (max-width: 980px) {
@@ -420,189 +261,209 @@
       .sidebar { display: none; }
       .kpis, .grid-2 { grid-template-columns: 1fr; }
       .topbar { flex-direction: column; align-items: flex-start; }
+      .modal-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── DEBUG BOX ── -->
   <div id="debug-box"></div>
+  <div id="toast"></div>
 
-  <!-- ── LOGIN SCREEN ───────────────────────────── -->
+  <!-- LOGIN -->
   <div id="login-screen">
     <div class="login-card">
       <div class="login-brand">
         <div class="login-logo">IZ</div>
-        <div>
-          <h1>IZVPRO</h1>
-          <p>Upravljanje predmetima</p>
-        </div>
+        <div><h1>IZVPRO</h1><p>Upravljanje predmetima</p></div>
       </div>
-
       <h2>Prijava</h2>
       <p class="subtitle">Unesite podatke za pristup sistemu.</p>
-
       <div class="login-error" id="login-error"></div>
-
       <form id="login-form" autocomplete="on">
         <div class="form-group">
           <label for="login-email">E-mail adresa</label>
-          <input
-            id="login-email"
-            type="email"
-            name="email"
-            placeholder="admin@kancelarija.rs"
-            autocomplete="email"
-            required
-          />
+          <input id="login-email" type="email" name="email" placeholder="admin@kancelarija.rs" autocomplete="email" required />
         </div>
         <div class="form-group">
           <label for="login-password">Lozinka</label>
-          <input
-            id="login-password"
-            type="password"
-            name="password"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-          />
+          <input id="login-password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
         </div>
         <button class="btn-login" id="login-btn" type="submit">Prijavi se</button>
       </form>
-
       <div class="login-no-profile" id="login-no-profile">
-        ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.<br>
-        Obratite se administratoru sistema.
+        ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.<br>Obratite se administratoru sistema.
       </div>
     </div>
   </div>
 
-  <!-- ── APP SHELL ─ -->
+  <!-- APP -->
   <div id="app-shell">
     <div class="app">
       <aside class="sidebar">
         <div class="brand">
           <div class="logo">IZ</div>
-          <div>
-            <h1>IZVPRO</h1>
-            <p>Upravljanje predmetima</p>
-          </div>
+          <div><h1>IZVPRO</h1><p>Upravljanje predmetima</p></div>
         </div>
-
         <nav class="nav">
-          <a class="active" href="#">Kontrolna tabla</a>
-          <a href="#">Predmeti</a>
-          <a href="#">Dokumenta</a>
-          <a href="#">Rokovi</a>
-          <a href="#">Statusi</a>
-          <a href="#">Korisnici</a>
+          <a class="active" data-view="dashboard">📊 Kontrolna tabla</a>
+          <a data-view="cases">📁 Predmeti</a>
+          <a data-view="deadlines">⏰ Rokovi</a>
+          <a data-view="documents">📄 Dokumenta</a>
         </nav>
-
         <div class="sidebar-user">
           <div class="user-name" id="sidebar-user-name">—</div>
           <div class="user-role" id="sidebar-user-role">—</div>
           <button class="btn-logout" id="btn-logout">Odjavi se</button>
         </div>
-
         <div class="sidebar-card">
-          <h3>Danas</h3>
+          <h3>Rokovi danas</h3>
           <strong id="sidebar-today-count">—</strong>
-          <p class="meta">stavki traži proveru</p>
+          <p class="meta">stavki traži pažnju</p>
         </div>
       </aside>
 
       <main class="content">
-        <div class="topbar">
-          <div>
-            <h2>Kontrolna tabla</h2>
-            <p>Pregled predmeta, rokova i dokumenata na jednom mestu.</p>
+
+        <!-- DASHBOARD -->
+        <div class="view active" id="view-dashboard">
+          <div class="topbar">
+            <div><h2>Kontrolna tabla</h2><p>Pregled predmeta, rokova i dokumenata.</p></div>
+            <div class="actions">
+              <button class="btn btn-primary" id="btn-new-case">+ Novi predmet</button>
+            </div>
           </div>
-          <div class="actions">
-            <button class="btn btn-secondary">Izvezi pregled</button>
-            <button class="btn btn-primary" id="btn-new-case">Novi predmet</button>
+          <section class="kpis">
+            <div class="card"><h3>Ukupno predmeta</h3><div class="metric" id="kpi-cases">—</div><div class="meta" id="kpi-cases-meta">Učitavanje...</div></div>
+            <div class="card"><h3>Otvoreni rokovi</h3><div class="metric" id="kpi-deadlines">—</div><div class="meta" id="kpi-deadlines-meta">Učitavanje...</div></div>
+            <div class="card"><h3>Dokumenta</h3><div class="metric" id="kpi-docs">—</div><div class="meta" id="kpi-docs-meta">Učitavanje...</div></div>
+            <div class="card"><h3>Predmeti u zastoju</h3><div class="metric" id="kpi-stalled">—</div><div class="meta" id="kpi-stalled-meta">Učitavanje...</div></div>
+          </section>
+          <section class="grid-2">
+            <div class="card">
+              <div class="section-head"><h3>Status predmeta</h3><span class="pill">Pregled</span></div>
+              <div class="bars">
+                <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:0%" id="bar-active"></span></div><strong id="bar-active-n">—</strong></div>
+                <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:0%" id="bar-review"></span></div><strong id="bar-review-n">—</strong></div>
+                <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:0%" id="bar-done"></span></div><strong id="bar-done-n">—</strong></div>
+                <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:0%" id="bar-returned"></span></div><strong id="bar-returned-n">—</strong></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-head"><h3>Hitni rokovi</h3><span class="pill">Prioritet</span></div>
+              <div class="list" id="urgent-deadlines-list">
+                <div style="color:var(--muted);font-size:14px;padding:8px 0">Učitavanje rokova...</div>
+              </div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="section-head"><h3>Poslednje aktivnosti</h3><span class="pill" id="activity-updated">Učitavanje...</span></div>
+            <table>
+              <thead><tr><th>Predmet</th><th>Radnja</th><th>Korisnik</th><th>Datum</th><th>Status</th></tr></thead>
+              <tbody id="activity-table-body">
+                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje aktivnosti...</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+
+        <!-- PREDMETI -->
+        <div class="view" id="view-cases">
+          <div class="topbar">
+            <div><h2>Predmeti</h2><p>Pretraži i upravljaj predmetima.</p></div>
+            <div class="actions"><button class="btn btn-primary" id="btn-new-case-2">+ Novi predmet</button></div>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="cases-search" placeholder="Pretraži po broju, dužniku, poveriocu..." />
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>Broj predmeta</th><th>Dužnik</th><th>Poverilac</th><th>Iznos (RSD)</th><th>Status</th><th>Datum</th></tr></thead>
+              <tbody id="cases-table-body">
+                <tr><td colspan="6" style="color:var(--muted);padding:20px 10px">Učitavanje predmeta...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <section class="kpis">
-          <div class="card">
-            <h3>Ukupno predmeta</h3>
-            <div class="metric" id="kpi-cases">—</div>
-            <div class="meta" id="kpi-cases-meta">Učitavanje...</div>
+        <!-- ROKOVI -->
+        <div class="view" id="view-deadlines">
+          <div class="topbar">
+            <div><h2>Rokovi</h2><p>Svi aktivni rokovi sortirani po hitnosti.</p></div>
           </div>
           <div class="card">
-            <h3>Otvoreni rokovi</h3>
-            <div class="metric" id="kpi-deadlines">—</div>
-            <div class="meta" id="kpi-deadlines-meta">Učitavanje...</div>
+            <table>
+              <thead><tr><th>Predmet</th><th>Opis roka</th><th>Datum roka</th><th>Preostalo</th><th>Status</th></tr></thead>
+              <tbody id="deadlines-table-body">
+                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje rokova...</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="card">
-            <h3>Dokumenta</h3>
-            <div class="metric" id="kpi-docs">—</div>
-            <div class="meta" id="kpi-docs-meta">Učitavanje...</div>
-          </div>
-          <div class="card">
-            <h3>Predmeti u zastoju</h3>
-            <div class="metric" id="kpi-stalled">—</div>
-            <div class="meta" id="kpi-stalled-meta">Učitavanje...</div>
-          </div>
-        </section>
+        </div>
 
-        <section class="grid-2">
+        <!-- DOKUMENTA -->
+        <div class="view" id="view-documents">
+          <div class="topbar">
+            <div><h2>Dokumenta</h2><p>Pregled svih dokumenata po predmetima.</p></div>
+          </div>
           <div class="card">
-            <div class="section-head">
-              <h3>Status predmeta</h3>
-              <span class="pill">Poslednjih 30 dana</span>
-            </div>
-            <div class="bars" id="status-bars">
-              <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:0%" id="bar-active"></span></div><strong id="bar-active-n">—</strong></div>
-              <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:0%" id="bar-review"></span></div><strong id="bar-review-n">—</strong></div>
-              <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:0%" id="bar-done"></span></div><strong id="bar-done-n">—</strong></div>
-              <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:0%" id="bar-returned"></span></div><strong id="bar-returned-n">—</strong></div>
-            </div>
+            <table>
+              <thead><tr><th>Naziv dokumenta</th><th>Predmet</th><th>Tip</th><th>Datum</th><th>Status</th></tr></thead>
+              <tbody id="documents-table-body">
+                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje dokumenata...</td></tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <div class="card">
-            <div class="section-head">
-              <h3>Hitni rokovi</h3>
-              <span class="pill">Prioritet</span>
-            </div>
-            <div class="list" id="urgent-deadlines-list">
-              <div style="color:var(--muted);font-size:14px;padding:8px 0">Učitavanje rokova...</div>
-            </div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="section-head">
-            <h3>Poslednje aktivnosti</h3>
-            <span class="pill" id="activity-updated">Učitavanje...</span>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Predmet</th>
-                <th>Radnja</th>
-                <th>Korisnik</th>
-                <th>Datum</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="activity-table-body">
-              <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje aktivnosti...</td></tr>
-            </tbody>
-          </table>
-        </section>
       </main>
     </div>
   </div>
 
-  <script>
-    window.__env = {
-      SUPABASE_URL: "https://bwpyivqdinemhfrrjdhu.supabase.co",
-      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k"
-    };
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal-new-case">
+    <div class="modal">
+      <h3>Novi predmet</h3>
+      <div class="modal-error" id="modal-error"></div>
+      <div class="modal-grid">
+        <div class="form-group"><label>Broj predmeta *</label><input type="text" id="case-number" placeholder="IZV-2026-001" /></div>
+        <div class="form-group"><label>Status *</label>
+          <select id="case-status">
+            <option value="active">U radu</option>
+            <option value="review">Na proveri</option>
+            <option value="stalled">Zastoj</option>
+            <option value="closed">Zatvoren</option>
+            <option value="returned">Vraćen</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Dužnik *</label><input type="text" id="case-debtor" placeholder="Ime i prezime / naziv firme" /></div>
+        <div class="form-group full"><label>Poverilac *</label><input type="text" id="case-creditor" placeholder="Naziv poverioca" /></div>
+        <div class="form-group"><label>Iznos (RSD)</label><input type="number" id="case-amount" placeholder="0.00" min="0" step="0.01" /></div>
+        <div class="form-group"><label>Datum podnošenja</label><input type="date" id="case-filed-date" /></div>
+        <div class="form-group full"><label>Napomena</label><textarea id="case-note" placeholder="Opcionalna napomena..."></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-modal-cancel">Otkaži</button>
+        <button class="btn btn-primary" id="btn-modal-save">Sačuvaj predmet</button>
+      </div>
+    </div>
+  </div>
 
-    // ── DEBUG HELPER ──
+  <script>
+    window.__env = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+    window.__envReady = (async function () {
+      try {
+        const res = await fetch('/api/env');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        window.__env = await res.json();
+      } catch (e) {
+        console.error('[IZVPRO] Env config nije ucitan:', e.message);
+      }
+    })();
+
+    const _isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     function dbg(msg) {
+      if (!_isDev) return;
       const box = document.getElementById('debug-box');
       if (!box) return;
       box.style.display = 'block';
@@ -610,18 +471,32 @@
       box.scrollTop = box.scrollHeight;
     }
     window.dbg = dbg;
+
+    function showToast(msg, duration = 3000) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('visible');
+      setTimeout(() => t.classList.remove('visible'), duration);
+    }
+    window.showToast = showToast;
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
-  (function () {
+  (async function () {
+    await window.__envReady;
+
     const SUPABASE_URL      = window.__env?.SUPABASE_URL     || '';
     const SUPABASE_ANON_KEY = window.__env?.SUPABASE_ANON_KEY || '';
 
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.error('[IZVPRO] Supabase env nije konfigurisan!');
+    }
 
-    window._sb = sb;
+    const { createClient } = supabase;
+    const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window._sb = _sb;
     window._currentProfile = null;
 
     const loginScreen = document.getElementById('login-screen');
@@ -632,84 +507,57 @@
     const noProfile   = document.getElementById('login-no-profile');
     const btnLogout   = document.getElementById('btn-logout');
 
-    function showLogin() {
-      loginScreen.classList.remove('hidden');
-      appShell.classList.remove('visible');
+    function showLogin() { loginScreen.classList.remove('hidden'); appShell.classList.remove('visible'); }
+    function showApp()   { loginScreen.classList.add('hidden');    appShell.classList.add('visible'); }
+    function showError(msg) { loginError.textContent = msg; loginError.classList.add('visible'); }
+    function clearError()   { loginError.classList.remove('visible'); noProfile.classList.remove('visible'); }
+
+    async function loadProfile(userId) {
+      try {
+        const { data, error } = await _sb
+          .from('profiles')
+          .select('id, full_name, email, role, is_active, tenant_id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (error) { dbg('loadProfile greska: ' + error.message); return null; }
+        if (!data)  { dbg('Profil nije pronadjen'); return null; }
+        if (!data.is_active) { dbg('Profil nije aktivan'); return null; }
+        return data;
+      } catch (err) {
+        dbg('loadProfile exception: ' + err.message);
+        return null;
+      }
     }
 
-    function showApp() {
-      loginScreen.classList.add('hidden');
-      appShell.classList.add('visible');
-    }
-
-    function showError(msg) {
-      loginError.textContent = msg;
-      loginError.classList.add('visible');
-    }
-
-    function clearError() {
-      loginError.classList.remove('visible');
-      noProfile.classList.remove('visible');
-    }
-
-   async function loadProfile(userId) {
-  try {
-    const { data, error } = await _sb
-      .from('profiles')
-      .select('id, full_name, email, role, is_active, tenant_id')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error || !data || !data.is_active) return null;
-    return data;
-  } catch (err) {
-    return null;
-  }
-     
     function applyProfileToUI(profile) {
       window._currentProfile = profile;
       const nameEl = document.getElementById('sidebar-user-name');
       const roleEl = document.getElementById('sidebar-user-role');
       if (nameEl) nameEl.textContent = profile.full_name || profile.email || 'Korisnik';
       if (roleEl) roleEl.textContent = profile.role
-        ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
-        : '—';
+        ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : '—';
     }
 
     async function handleSessionUser(user) {
       dbg('handleSessionUser: ' + user.id);
       const profile = await loadProfile(user.id);
-
       if (!profile) {
-        dbg('Profil nije pronadjen — odjavljujem');
         noProfile.classList.add('visible');
-        await sb.auth.signOut();
+        await _sb.auth.signOut();
         showLogin();
         return;
       }
-
-      if (!profile.is_active) {
-        dbg('Profil nije aktivan');
-        showError('Vaš nalog je deaktiviran. Obratite se administratoru.');
-        await sb.auth.signOut();
-        showLogin();
-        return;
-      }
-
-      dbg('Profil OK — ulazim u app');
       applyProfileToUI(profile);
       showApp();
       document.dispatchEvent(new CustomEvent('izvpro:ready', { detail: { user, profile } }));
     }
 
-    sb.auth.onAuthStateChange(async (event, session) => {
+    _sb.auth.onAuthStateChange(async (event, session) => {
       dbg('authEvent: ' + event);
       if (event === 'INITIAL_SESSION') {
-        if (session?.user) {
-          await handleSessionUser(session.user);
-        } else {
-          showLogin();
-        }
+        if (session?.user) await handleSessionUser(session.user);
+        else showLogin();
       } else if (event === 'SIGNED_IN' && session?.user) {
         await handleSessionUser(session.user);
       } else if (event === 'SIGNED_OUT') {
@@ -723,14 +571,10 @@
       clearError();
       loginBtn.disabled = true;
       loginBtn.textContent = 'Prijavljivanje...';
-
       const email    = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-
       dbg('Pokusaj prijave: ' + email);
-
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-
+      const { error } = await _sb.auth.signInWithPassword({ email, password });
       if (error) {
         dbg('Auth greska: ' + error.message);
         const msg = error.message.includes('Invalid login')
@@ -744,13 +588,96 @@
       }
     });
 
-    if (btnLogout) {
-      btnLogout.addEventListener('click', async () => {
-        await sb.auth.signOut();
+    btnLogout?.addEventListener('click', async () => { await _sb.auth.signOut(); });
+
+    document.querySelectorAll('.nav a[data-view]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const viewId = link.dataset.view;
+        document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        const target = document.getElementById('view-' + viewId);
+        if (target) target.classList.add('active');
+        document.dispatchEvent(new CustomEvent('izvpro:navigate', { detail: { view: viewId } }));
       });
+    });
+
+    const modal      = document.getElementById('modal-new-case');
+    const modalError = document.getElementById('modal-error');
+
+    function openModal() { modal.classList.add('visible'); document.getElementById('case-number').focus(); }
+    function closeModal() {
+      modal.classList.remove('visible');
+      modalError.classList.remove('visible');
+      ['case-number','case-debtor','case-creditor','case-amount','case-note'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('case-filed-date').value = '';
+      document.getElementById('case-status').value = 'active';
     }
+
+    document.getElementById('btn-new-case')?.addEventListener('click', openModal);
+    document.getElementById('btn-new-case-2')?.addEventListener('click', openModal);
+    document.getElementById('btn-modal-cancel')?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    document.getElementById('btn-modal-save')?.addEventListener('click', async () => {
+      const caseNumber = document.getElementById('case-number').value.trim();
+      const debtor     = document.getElementById('case-debtor').value.trim();
+      const creditor   = document.getElementById('case-creditor').value.trim();
+      const status     = document.getElementById('case-status').value;
+      const amount     = document.getElementById('case-amount').value || null;
+      const note       = document.getElementById('case-note').value.trim() || null;
+      const filedDate  = document.getElementById('case-filed-date').value || null;
+
+      if (!caseNumber || !debtor || !creditor) {
+        modalError.textContent = 'Molimo popunite obavezna polja: Broj predmeta, Dužnik, Poverilac.';
+        modalError.classList.add('visible');
+        return;
+      }
+
+      const profile = window._currentProfile;
+      if (!profile?.tenant_id) {
+        modalError.textContent = 'Greška: sesija nije validna. Prijavite se ponovo.';
+        modalError.classList.add('visible');
+        return;
+      }
+
+      const saveBtn = document.getElementById('btn-modal-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Čuvanje...';
+
+      const { error } = await _sb.from('cases').insert({
+        tenant_id:   profile.tenant_id,
+        case_number: caseNumber,
+        debtor_name: debtor,
+        creditor:    creditor,
+        status:      status,
+        amount:      amount ? parseFloat(amount) : null,
+        note:        note,
+        filed_date:  filedDate,
+        created_by:  profile.id
+      });
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Sačuvaj predmet';
+
+      if (error) {
+        dbg('Insert greska: ' + error.message);
+        modalError.textContent = 'Greška: ' + error.message;
+        modalError.classList.add('visible');
+        return;
+      }
+
+      closeModal();
+      showToast('✅ Predmet uspešno sačuvan');
+      document.dispatchEvent(new CustomEvent('izvpro:case-created'));
+    });
+
   })();
   </script>
+
   <script src="./app.js"></script>
 </body>
 </html>
