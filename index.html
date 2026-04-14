@@ -7,779 +7,263 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f7f6f2;
-      --surface: #ffffff;
-      --surface-2: #f3f0ea;
-      --border: #ddd8cf;
-      --text: #23211c;
-      --muted: #6f6d67;
-      --primary: #0f5f68;
-      --primary-soft: #dbe9e6;
-      --success: #4b7a31;
-      --warning: #a86121;
-      --danger: #a33f52;
-      --radius: 18px;
-      --radius-sm: 12px;
-      --shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
-      --transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+      --bg: #f7f6f2; --surface: #ffffff; --surface-2: #f3f0ea;
+      --border: #ddd8cf; --text: #23211c; --muted: #6f6d67;
+      --primary: #0f5f68; --primary-soft: #dbe9e6;
+      --success: #4b7a31; --success-soft: #dce8d7;
+      --warning: #a86121; --danger: #a33f52; --danger-soft: #f3dde2;
+      --radius: 18px; --radius-sm: 12px;
+      --shadow: 0 10px 30px rgba(16,24,40,.06);
+      --transition: 150ms cubic-bezier(0.16,1,0.3,1);
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Satoshi', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    #login-screen {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; background: var(--bg);
-    }
-    #login-screen.hidden { display: none; }
-
-    .login-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 40px 36px;
-      width: 100%; max-width: 420px; box-shadow: var(--shadow);
-    }
-    .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
-    .login-logo {
-      width: 44px; height: 44px; border-radius: 14px;
-      background: var(--primary); color: white;
-      display: grid; place-items: center;
-      font-weight: 700; font-size: 18px; flex-shrink: 0;
-    }
-    .login-brand h1 { font-size: 20px; line-height: 1.1; }
-    .login-brand p { font-size: 13px; color: var(--muted); }
-    .login-card h2 { font-size: 22px; margin-bottom: 6px; }
-    .login-card .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block; font-size: 13px; font-weight: 600; color: var(--muted);
-      margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;
-    }
-    .form-group input {
-      width: 100%; border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px 14px; font-size: 15px; font-family: inherit;
-      background: var(--bg); color: var(--text); outline: none;
-      transition: border-color var(--transition), background var(--transition);
-    }
-    .form-group input:focus { border-color: var(--primary); background: white; }
-    .login-error {
-      background: #f3dde2; color: var(--danger); border-radius: 10px;
-      padding: 12px 14px; font-size: 14px; margin-bottom: 16px; display: none;
-    }
-    .login-error.visible { display: block; }
-    .btn-login {
-      width: 100%; background: var(--primary); color: white; border: none;
-      border-radius: 999px; padding: 14px; font-size: 15px; font-weight: 600;
-      font-family: inherit; cursor: pointer; margin-top: 8px;
-      transition: opacity var(--transition);
-    }
-    .btn-login:hover:not(:disabled) { opacity: .88; }
-    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
-    .login-no-profile {
-      background: #f4e5d7; color: var(--warning); border-radius: 10px;
-      padding: 14px; font-size: 14px; line-height: 1.5; margin-top: 16px; display: none;
-    }
-    .login-no-profile.visible { display: block; }
-
-    #app-shell { display: none; }
-    #app-shell.visible { display: block; }
-
-    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-
-    .sidebar {
-      background: var(--surface-2); border-right: 1px solid var(--border);
-      padding: 24px; display: flex; flex-direction: column;
-      position: sticky; top: 0; height: 100vh; overflow-y: auto;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
-    .logo {
-      width: 42px; height: 42px; border-radius: 14px; background: var(--primary);
-      color: white; display: grid; place-items: center; font-weight: 700; font-size: 17px;
-      flex-shrink: 0;
-    }
-    .brand h1 { font-size: 22px; line-height: 1.1; }
-    .brand p { font-size: 13px; color: var(--muted); }
-
-    .nav { display: grid; gap: 4px; margin-bottom: 28px; }
-    .nav a {
-      text-decoration: none; color: var(--text); padding: 11px 14px;
-      border-radius: 12px; display: flex; align-items: center; gap: 10px;
-      font-size: 15px; cursor: pointer;
-      transition: background var(--transition), color var(--transition);
-      user-select: none;
-    }
-    .nav a:hover { background: rgba(15,95,104,.08); }
-    .nav a.active { background: white; color: var(--primary); box-shadow: var(--shadow); font-weight: 600; }
-
-    .sidebar-spacer { flex: 1; }
-
-    .sidebar-user {
-      background: white; border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px;
-    }
-    .sidebar-user .user-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-    .sidebar-user .user-role { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-    .btn-logout {
-      width: 100%; background: transparent; border: 1px solid var(--border);
-      border-radius: 999px; padding: 8px 12px; font-size: 13px; font-family: inherit;
-      color: var(--muted); cursor: pointer;
-      transition: background var(--transition), color var(--transition), border-color var(--transition);
-    }
-    .btn-logout:hover { background: #f3dde2; color: var(--danger); border-color: #e8c5ce; }
-
-    .sidebar-card {
-      background: white; border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 16px;
-    }
-    .sidebar-card h3 { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
-    .sidebar-card strong { font-size: 30px; display: block; }
-
-    .content { padding: 28px; overflow-y: auto; }
-    .view { display: none; }
-    .view.active { display: block; }
-
-    .topbar {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
-    }
-    .topbar h2 { font-size: 28px; line-height: 1.1; margin-bottom: 4px; }
-    .topbar p { color: var(--muted); font-size: 15px; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .btn {
-      border: none; border-radius: 999px; padding: 11px 20px; font-size: 14px;
-      font-family: inherit; cursor: pointer;
-      transition: opacity var(--transition), background var(--transition);
-    }
-    .btn:hover:not(:disabled) { opacity: .88; }
-    .btn:disabled { opacity: .6; cursor: not-allowed; }
-    .btn-secondary { background: white; border: 1px solid var(--border); color: var(--text); }
-    .btn-primary { background: var(--primary); color: white; font-weight: 600; }
-
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
-    }
-    .card h3 {
-      color: var(--muted); font-size: 13px; margin-bottom: 8px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .04em;
-    }
-    .metric { font-size: 34px; font-weight: 700; line-height: 1; }
-    .meta { margin-top: 6px; color: var(--muted); font-size: 13px; }
-
-    .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .section-head {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 16px; gap: 10px;
-    }
-    .section-head h3 { font-size: 16px; font-weight: 600; }
-    .pill {
-      background: var(--primary-soft); color: var(--primary);
-      padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
-    }
-
-    .bars { display: grid; gap: 14px; }
-    .bar-row { display: grid; grid-template-columns: 110px 1fr 36px; gap: 12px; align-items: center; font-size: 14px; }
-    .bar { height: 10px; background: #e8e3db; border-radius: 999px; overflow: hidden; }
-    .bar > span { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width .6s ease; }
-
-    .list { display: grid; gap: 10px; }
-    .list-item {
-      border: 1px solid var(--border); border-radius: 14px; padding: 14px;
-      background: white; display: flex; justify-content: space-between;
-      align-items: flex-start; gap: 12px;
-    }
-    .list-item strong { display: block; margin-bottom: 4px; font-size: 14px; }
-    .list-item small { color: var(--muted); font-size: 13px; }
-
-    .status { padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-    .danger  { background: #f3dde2; color: var(--danger); }
-    .warning { background: #f4e5d7; color: var(--warning); }
-    .success { background: #dce8d7; color: var(--success); }
-    .neutral { background: #ece8e1; color: var(--muted); }
-
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { text-align: left; padding: 13px 10px; border-bottom: 1px solid #ece7df; }
-    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
-    tr:hover td { background: #faf9f6; }
-
-    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-    .search-bar input {
-      flex: 1; border: 1px solid var(--border); border-radius: 10px;
-      padding: 11px 14px; font-size: 14px; font-family: inherit;
-      background: white; outline: none;
-      transition: border-color var(--transition);
-    }
-    .search-bar input:focus { border-color: var(--primary); }
-
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(16,24,40,.38);
-      backdrop-filter: blur(4px); display: none; align-items: center;
-      justify-content: center; z-index: 1000; padding: 16px;
-    }
-    .modal-overlay.visible { display: flex; }
-    .modal {
-      background: white; border-radius: var(--radius); padding: 32px;
-      width: 100%; max-width: 520px;
-      box-shadow: 0 20px 60px rgba(16,24,40,.16);
-      max-height: 90vh; overflow-y: auto;
-    }
-    .modal h3 { font-size: 20px; margin-bottom: 20px; }
-    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .modal-grid .full { grid-column: 1 / -1; }
-    .modal .form-group label {
-      font-size: 12px; font-weight: 600; color: var(--muted);
-      text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 6px;
-    }
-    .modal .form-group input,
-    .modal .form-group select,
-    .modal .form-group textarea {
-      width: 100%; border: 1px solid var(--border); border-radius: 10px;
-      padding: 10px 12px; font-size: 14px; font-family: inherit;
-      background: var(--bg); color: var(--text); outline: none;
-      transition: border-color var(--transition), background var(--transition);
-    }
-    .modal .form-group input:focus,
-    .modal .form-group select:focus,
-    .modal .form-group textarea:focus { border-color: var(--primary); background: white; }
-    .modal .form-group textarea { resize: vertical; min-height: 80px; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-    .modal-error {
-      background: #f3dde2; color: var(--danger); border-radius: 8px;
-      padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
-    }
-    .modal-error.visible { display: block; }
-
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: #1a1a1a; color: white; padding: 12px 20px;
-      border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none;
-      transition: opacity .25s; z-index: 9000; white-space: nowrap;
-    }
-    #toast.visible { opacity: 1; }
-
-    .skeleton {
-      background: linear-gradient(90deg, #ece8e0 25%, #f3efe8 50%, #ece8e0 75%);
-      background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite;
-      border-radius: 6px; display: inline-block;
-    }
-    @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-
-    #debug-box {
-      position: fixed; bottom: 16px; right: 16px; background: #1a1a1a; color: #00ff88;
-      font-family: monospace; font-size: 12px; padding: 12px 16px; border-radius: 10px;
-      max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none;
-    }
-
-    @media (max-width: 980px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar {
-        position: static; height: auto;
-        flex-direction: row; flex-wrap: wrap;
-        padding: 16px; border-right: none; border-bottom: 1px solid var(--border);
-      }
-      .brand { margin-bottom: 0; }
-      .nav { flex-direction: row; gap: 4px; margin-bottom: 0; }
-      .nav a { padding: 8px 12px; font-size: 13px; }
-      .sidebar-user, .sidebar-card, .sidebar-spacer { display: none; }
-      .kpis { grid-template-columns: repeat(2, 1fr); }
-      .grid-2 { grid-template-columns: 1fr; }
-      .topbar { flex-direction: column; align-items: flex-start; }
-      .modal-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 540px) {
-      .kpis { grid-template-columns: 1fr; }
-      .content { padding: 16px; }
-      .login-card { padding: 28px 20px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Satoshi',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+    #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+    #login-screen.hidden{display:none}
+    .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px 36px;width:100%;max-width:420px;box-shadow:var(--shadow)}
+    .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+    .login-logo{width:44px;height:44px;border-radius:14px;background:var(--primary);color:white;display:grid;place-items:center;font-weight:700;font-size:18px;flex-shrink:0}
+    .login-brand h1{font-size:20px;line-height:1.1}
+    .login-brand p{font-size:13px;color:var(--muted)}
+    .login-card h2{font-size:22px;margin-bottom:6px}
+    .login-card .subtitle{font-size:14px;color:var(--muted);margin-bottom:28px}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+    .form-group input{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;transition:border-color var(--transition),background var(--transition)}
+    .form-group input:focus{border-color:var(--primary);background:white}
+    .login-error{background:#f3dde2;color:var(--danger);border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:16px;display:none}
+    .login-error.visible{display:block}
+    .btn-login{width:100%;background:var(--primary);color:white;border:none;border-radius:999px;padding:14px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:8px;transition:opacity var(--transition)}
+    .btn-login:hover:not(:disabled){opacity:.88}
+    .btn-login:disabled{opacity:.6;cursor:not-allowed}
+    .login-no-profile{background:#f4e5d7;color:var(--warning);border-radius:10px;padding:14px;font-size:14px;line-height:1.5;margin-top:16px;display:none}
+    .login-no-profile.visible{display:block}
+    #app-shell{display:none}
+    #app-shell.visible{display:block}
+    .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    .sidebar{background:var(--surface-2);border-right:1px solid var(--border);padding:24px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+    .logo{width:42px;height:42px;border-radius:14px;background:var(--primary);color:white;display:grid;place-items:center;font-weight:700;font-size:17px;flex-shrink:0}
+    .brand h1{font-size:22px;line-height:1.1}
+    .brand p{font-size:13px;color:var(--muted)}
+    .nav{display:grid;gap:4px;margin-bottom:28px}
+    .nav a{text-decoration:none;color:var(--text);padding:11px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;font-size:15px;cursor:pointer;transition:background var(--transition),color var(--transition);user-select:none}
+    .nav a:hover{background:rgba(15,95,104,.08)}
+    .nav a.active{background:white;color:var(--primary);box-shadow:var(--shadow);font-weight:600}
+    .sidebar-spacer{flex:1}
+    .sidebar-user{background:white;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px}
+    .sidebar-user .user-name{font-size:14px;font-weight:600;margin-bottom:2px}
+    .sidebar-user .user-role{font-size:12px;color:var(--muted);margin-bottom:10px}
+    .btn-logout{width:100%;background:transparent;border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--muted);cursor:pointer;transition:background var(--transition),color var(--transition),border-color var(--transition)}
+    .btn-logout:hover{background:#f3dde2;color:var(--danger);border-color:#e8c5ce}
+    .sidebar-card{background:white;border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px}
+    .sidebar-card h3{font-size:14px;color:var(--muted);margin-bottom:6px}
+    .sidebar-card strong{font-size:30px;display:block}
+    .content{padding:28px;overflow-y:auto}
+    .view{display:none}
+    .view.active{display:block}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+    .topbar h2{font-size:28px;line-height:1.1;margin-bottom:4px}
+    .topbar p{color:var(--muted);font-size:15px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-family:inherit;cursor:pointer;transition:opacity var(--transition),background var(--transition)}
+    .btn:hover:not(:disabled){opacity:.88}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn-secondary{background:white;border:1px solid var(--border);color:var(--text)}
+    .btn-primary{background:var(--primary);color:white;font-weight:600}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+    .card h3{color:var(--muted);font-size:13px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+    .metric{font-size:34px;font-weight:700;line-height:1}
+    .meta{margin-top:6px;color:var(--muted);font-size:13px}
+    .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
+    .section-head h3{font-size:16px;font-weight:600}
+    .pill{background:var(--primary-soft);color:var(--primary);padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600}
+    .bars{display:grid;gap:14px}
+    .bar-row{display:grid;grid-template-columns:110px 1fr 36px;gap:12px;align-items:center;font-size:14px}
+    .bar{height:10px;background:#e8e3db;border-radius:999px;overflow:hidden}
+    .bar>span{display:block;height:100%;background:var(--primary);border-radius:999px;transition:width .6s ease}
+    .list{display:grid;gap:10px}
+    .list-item{border:1px solid var(--border);border-radius:14px;padding:14px;background:white;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .list-item strong{display:block;margin-bottom:4px;font-size:14px}
+    .list-item small{color:var(--muted);font-size:13px}
+    .status{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+    .danger{background:#f3dde2;color:var(--danger)}
+    .warning{background:#f4e5d7;color:var(--warning)}
+    .success{background:#dce8d7;color:var(--success)}
+    .neutral{background:#ece8e1;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{text-align:left;padding:13px 10px;border-bottom:1px solid #ece7df}
+    th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+    tr:hover td{background:#faf9f6}
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:white;padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9000;white-space:nowrap}
+    #toast.visible{opacity:1}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    #debug-box{position:fixed;bottom:16px;right:16px;background:#1a1a1a;color:#00ff88;font-family:monospace;font-size:12px;padding:12px 16px;border-radius:10px;max-width:400px;max-height:200px;overflow-y:auto;z-index:9999;display:none}
+    @media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;padding:16px;border-right:none;border-bottom:1px solid var(--border)}.brand{margin-bottom:0}.nav{flex-direction:row;gap:4px;margin-bottom:0}.nav a{padding:8px 12px;font-size:13px}.sidebar-user,.sidebar-card,.sidebar-spacer{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}.topbar{flex-direction:column;align-items:flex-start}}
+    @media(max-width:540px){.kpis{grid-template-columns:1fr}.content{padding:16px}.login-card{padding:28px 20px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
 </head>
 <body>
 
-  <div id="debug-box"></div>
-  <div id="toast" role="status" aria-live="polite"></div>
+<div id="debug-box"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- LOGIN -->
-  <div id="login-screen">
-    <div class="login-card">
-      <div class="login-brand">
-        <div class="login-logo" aria-hidden="true">IZ</div>
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo" aria-hidden="true">IZ</div>
+      <div><h1>IZVPRO</h1><p>Upravljanje predmetima</p></div>
+    </div>
+    <h2>Prijava</h2>
+    <p class="subtitle">Unesite podatke za pristup sistemu.</p>
+    <div class="login-error" id="login-error" role="alert"></div>
+    <form id="login-form" autocomplete="on" novalidate>
+      <div class="form-group">
+        <label for="login-email">E-mail adresa</label>
+        <input id="login-email" type="email" name="email" placeholder="admin@kancelarija.rs" autocomplete="email" required />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Lozinka</label>
+        <input id="login-password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <button class="btn-login" id="login-btn" type="submit">Prijavi se</button>
+    </form>
+    <div class="login-no-profile" id="login-no-profile" role="alert">
+      ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.<br>Obratite se administratoru sistema.
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-shell">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">IZ</div>
         <div><h1>IZVPRO</h1><p>Upravljanje predmetima</p></div>
       </div>
-      <h2>Prijava</h2>
-      <p class="subtitle">Unesite podatke za pristup sistemu.</p>
-      <div class="login-error" id="login-error" role="alert"></div>
-      <form id="login-form" autocomplete="on" novalidate>
-        <div class="form-group">
-          <label for="login-email">E-mail adresa</label>
-          <input id="login-email" type="email" name="email"
-            placeholder="admin@kancelarija.rs" autocomplete="email" required />
-        </div>
-        <div class="form-group">
-          <label for="login-password">Lozinka</label>
-          <input id="login-password" type="password" name="password"
-            placeholder="••••••••" autocomplete="current-password" required />
-        </div>
-        <button class="btn-login" id="login-btn" type="submit">Prijavi se</button>
-      </form>
-      <div class="login-no-profile" id="login-no-profile" role="alert">
-        ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.<br>
-        Obratite se administratoru sistema.
+      <nav class="nav">
+        <a class="active" data-view="dashboard" href="#">📊 Kontrolna tabla</a>
+        <a data-view="cases" href="#">📁 Predmeti</a>
+        <a data-view="deadlines" href="#">⏰ Rokovi</a>
+        <a data-view="documents" href="#">📄 Dokumenta</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-user">
+        <div class="user-name" id="sidebar-user-name">—</div>
+        <div class="user-role" id="sidebar-user-role">—</div>
+        <button class="btn-logout" id="btn-logout" type="button">Odjavi se</button>
       </div>
-    </div>
-  </div>
+      <div class="sidebar-card">
+        <h3>Rokovi danas</h3>
+        <strong id="sidebar-today-count">—</strong>
+        <p class="meta">stavki traži pažnju</p>
+      </div>
+    </aside>
 
-  <!-- APP -->
-  <div id="app-shell">
-    <div class="app">
+    <main class="content" id="main-content" tabindex="-1">
 
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true">IZ</div>
-          <div><h1>IZVPRO</h1><p>Upravljanje predmetima</p></div>
+      <!-- DASHBOARD -->
+      <div class="view active" id="view-dashboard">
+        <div class="topbar">
+          <div><h2>Kontrolna tabla</h2><p>Pregled predmeta, rokova i dokumenata.</p></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-new-case" type="button">+ Novi predmet</button>
+          </div>
         </div>
-        <nav class="nav">
-          <a class="active" data-view="dashboard" href="#">📊 Kontrolna tabla</a>
-          <a data-view="cases"     href="#">📁 Predmeti</a>
-          <a data-view="deadlines" href="#">⏰ Rokovi</a>
-          <a data-view="documents" href="#">📄 Dokumenta</a>
-        </nav>
-        <div class="sidebar-spacer"></div>
-        <div class="sidebar-user">
-          <div class="user-name" id="sidebar-user-name">—</div>
-          <div class="user-role" id="sidebar-user-role">—</div>
-          <button class="btn-logout" id="btn-logout" type="button">Odjavi se</button>
-        </div>
-        <div class="sidebar-card">
-          <h3>Rokovi danas</h3>
-          <strong id="sidebar-today-count">—</strong>
-          <p class="meta">stavki traži pažnju</p>
-        </div>
-      </aside>
-
-      <main class="content" id="main-content" tabindex="-1">
-
-        <!-- DASHBOARD -->
-        <div class="view active" id="view-dashboard">
-          <div class="topbar">
-            <div><h2>Kontrolna tabla</h2><p>Pregled predmeta, rokova i dokumenata.</p></div>
-            <div class="actions">
-              <button class="btn btn-primary" id="btn-new-case" type="button">+ Novi predmet</button>
+        <section class="kpis">
+          <div class="card"><h3>Ukupno predmeta</h3><div class="metric" id="kpi-cases">—</div><div class="meta" id="kpi-cases-meta">Učitavanje...</div></div>
+          <div class="card"><h3>Otvoreni rokovi</h3><div class="metric" id="kpi-deadlines">—</div><div class="meta" id="kpi-deadlines-meta">Učitavanje...</div></div>
+          <div class="card"><h3>Dokumenta</h3><div class="metric" id="kpi-docs">—</div><div class="meta" id="kpi-docs-meta">Učitavanje...</div></div>
+          <div class="card"><h3>Predmeti u zastoju</h3><div class="metric" id="kpi-stalled">—</div><div class="meta" id="kpi-stalled-meta">Učitavanje...</div></div>
+        </section>
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-head"><h3>Status predmeta</h3><span class="pill">Pregled</span></div>
+            <div class="bars">
+              <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:0%" id="bar-active"></span></div><strong id="bar-active-n">—</strong></div>
+              <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:0%" id="bar-review"></span></div><strong id="bar-review-n">—</strong></div>
+              <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:0%" id="bar-done"></span></div><strong id="bar-done-n">—</strong></div>
+              <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:0%" id="bar-returned"></span></div><strong id="bar-returned-n">—</strong></div>
             </div>
           </div>
-          <section class="kpis">
-            <div class="card"><h3>Ukupno predmeta</h3><div class="metric" id="kpi-cases">—</div><div class="meta" id="kpi-cases-meta">Učitavanje...</div></div>
-            <div class="card"><h3>Otvoreni rokovi</h3><div class="metric" id="kpi-deadlines">—</div><div class="meta" id="kpi-deadlines-meta">Učitavanje...</div></div>
-            <div class="card"><h3>Dokumenta</h3><div class="metric" id="kpi-docs">—</div><div class="meta" id="kpi-docs-meta">Učitavanje...</div></div>
-            <div class="card"><h3>Predmeti u zastoju</h3><div class="metric" id="kpi-stalled">—</div><div class="meta" id="kpi-stalled-meta">Učitavanje...</div></div>
-          </section>
-          <section class="grid-2">
-            <div class="card">
-              <div class="section-head"><h3>Status predmeta</h3><span class="pill">Pregled</span></div>
-              <div class="bars">
-                <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:0%" id="bar-active"></span></div><strong id="bar-active-n">—</strong></div>
-                <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:0%" id="bar-review"></span></div><strong id="bar-review-n">—</strong></div>
-                <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:0%" id="bar-done"></span></div><strong id="bar-done-n">—</strong></div>
-                <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:0%" id="bar-returned"></span></div><strong id="bar-returned-n">—</strong></div>
-              </div>
+          <div class="card">
+            <div class="section-head"><h3>Hitni rokovi</h3><span class="pill">Prioritet</span></div>
+            <div class="list" id="urgent-deadlines-list">
+              <div style="color:var(--muted);font-size:14px;padding:8px 0">Učitavanje rokova...</div>
             </div>
-            <div class="card">
-              <div class="section-head"><h3>Hitni rokovi</h3><span class="pill">Prioritet</span></div>
-              <div class="list" id="urgent-deadlines-list">
-                <div style="color:var(--muted);font-size:14px;padding:8px 0">Učitavanje rokova...</div>
-              </div>
-            </div>
-          </section>
-          <section class="card">
-            <div class="section-head"><h3>Poslednje aktivnosti</h3><span class="pill" id="activity-updated">Učitavanje...</span></div>
-            <table>
-              <thead><tr><th>Predmet</th><th>Radnja</th><th>Korisnik</th><th>Datum</th><th>Status</th></tr></thead>
-              <tbody id="activity-table-body">
-                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje aktivnosti...</td></tr>
-              </tbody>
-            </table>
-          </section>
-        </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="section-head"><h3>Poslednje aktivnosti</h3><span class="pill" id="activity-updated">Učitavanje...</span></div>
+          <table>
+            <thead><tr><th>Predmet</th><th>Radnja</th><th>Korisnik</th><th>Datum</th><th>Status</th></tr></thead>
+            <tbody id="activity-table-body">
+              <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje aktivnosti...</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
 
-        <!-- PREDMETI -->
-        <div class="view" id="view-cases">
-          <div class="topbar">
-            <div><h2>Predmeti</h2><p>Pretraži i upravljaj predmetima.</p></div>
-            <div class="actions"><button class="btn btn-primary" id="btn-new-case-2" type="button">+ Novi predmet</button></div>
-          </div>
-          <div class="search-bar">
-            <input type="search" id="cases-search" placeholder="Pretraži po broju, dužniku, poveriocu..." />
-          </div>
-          <div class="card">
-            <table>
-              <thead><tr><th>Broj predmeta</th><th>Dužnik</th><th>Poverilac</th><th>Iznos (RSD)</th><th>Status</th><th>Datum</th></tr></thead>
-              <tbody id="cases-table-body">
-                <tr><td colspan="6" style="color:var(--muted);padding:20px 10px">Učitavanje predmeta...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ROKOVI -->
-        <div class="view" id="view-deadlines">
-          <div class="topbar">
-            <div><h2>Rokovi</h2><p>Svi aktivni rokovi sortirani po hitnosti.</p></div>
-          </div>
-          <div class="card">
-            <table>
-              <thead><tr><th>Predmet</th><th>Opis roka</th><th>Datum roka</th><th>Preostalo</th><th>Status</th></tr></thead>
-              <tbody id="deadlines-table-body">
-                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje rokova...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- DOKUMENTA -->
-        <div class="view" id="view-documents">
-          <div class="topbar">
-            <div><h2>Dokumenta</h2><p>Pregled svih dokumenata po predmetima.</p></div>
-          </div>
-          <div class="card">
-            <table>
-              <thead><tr><th>Naziv dokumenta</th><th>Predmet</th><th>Tip</th><th>Datum</th><th>Status</th></tr></thead>
-              <tbody id="documents-table-body">
-                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje dokumenata...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </main>
-    </div>
-  </div>
-
-  <!-- MODAL — NOVI PREDMET -->
-  <div class="modal-overlay" id="modal-new-case" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal">
-      <h3 id="modal-title">Novi predmet</h3>
-      <div class="modal-error" id="modal-error" role="alert"></div>
-      <div class="modal-grid">
-        <div class="form-group">
-          <label for="case-number">Broj predmeta *</label>
-          <input type="text" id="case-number" placeholder="IZV-2026-001" autocomplete="off" />
-        </div>
-        <div class="form-group">
-          <label for="case-status">Status *</label>
-          <select id="case-status">
-            <option value="active">U radu</option>
-            <option value="review">Na proveri</option>
-            <option value="stalled">Zastoj</option>
-            <option value="closed">Zatvoren</option>
-            <option value="returned">Vraćen</option>
-          </select>
-        </div>
-        <div class="form-group full">
-          <label for="case-debtor">Dužnik *</label>
-          <input type="text" id="case-debtor" placeholder="Ime i prezime / naziv firme" />
-        </div>
-        <div class="form-group full">
-          <label for="case-creditor">Poverilac *</label>
-          <input type="text" id="case-creditor" placeholder="Naziv poverioca" />
-        </div>
-        <div class="form-group">
-          <label for="case-amount">Iznos (RSD)</label>
-          <input type="number" id="case-amount" placeholder="0.00" min="0" step="0.01" />
-        </div>
-        <div class="form-group">
-          <label for="case-filed-date">Datum podnošenja</label>
-          <input type="date" id="case-filed-date" />
-        </div>
-        <div class="form-group full">
-          <label for="case-note">Napomena</label>
-          <textarea id="case-note" placeholder="Opcionalna napomena..."></textarea>
+      <!-- PREDMETI -->
+      <div class="view" id="view-cases">
+        <div class="topbar">
+          <div><h2>Predmeti</h2><p>Pretraži i upravljaj predmetima.</p></div>
+          <div class="actions"><button class="btn btn-primary" id="btn-new-case-2" type="button">+ Novi predmet</button></div>
         </div>
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" id="btn-modal-cancel" type="button">Otkaži</button>
-        <button class="btn btn-primary"   id="btn-modal-save"   type="button">Sačuvaj predmet</button>
+
+      <!-- ROKOVI -->
+      <div class="view" id="view-deadlines">
+        <div class="topbar">
+          <div><h2>Rokovi</h2><p>Svi aktivni rokovi sortirani po hitnosti.</p></div>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Predmet</th><th>Opis roka</th><th>Datum roka</th><th>Preostalo</th><th>Status</th></tr></thead>
+            <tbody id="deadlines-table-body">
+              <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje rokova...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <!-- DOKUMENTA -->
+      <div class="view" id="view-documents">
+        <div class="topbar">
+          <div><h2>Dokumenta</h2><p>Pregled svih dokumenata po predmetima.</p></div>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Naziv dokumenta</th><th>Predmet</th><th>Tip</th><th>Datum</th><th>Status</th></tr></thead>
+            <tbody id="documents-table-body">
+              <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje dokumenata...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
   </div>
+</div>
 
-  <!-- SCRIPTS -->
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- 1. Env — direktno hardkodovano -->
-  <script>
-    window.__env = {
-      SUPABASE_URL: 'https://bwpyivqdinemhfrrjdhu.supabase.co',
-      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k'
-    };
-    window.__envReady = Promise.resolve();
-  </script>
+<!-- Konfiguracija — bez /api/env -->
+<script>
+  window.__env = {
+    SUPABASE_URL: 'https://bwpyivqdinemhfrrjdhu.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k'
+  };
+</script>
 
-  <!-- 2. Globals: dbg + showToast -->
-  <script>
-    (function () {
-      var _isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      window.dbg = function (msg) {
-        if (!_isDev) return;
-        var box = document.getElementById('debug-box');
-        if (!box) return;
-        box.style.display = 'block';
-        box.innerHTML += '<div>' + new Date().toLocaleTimeString() + ' — ' + msg + '</div>';
-        box.scrollTop = box.scrollHeight;
-      };
-      window.showToast = function (msg, duration) {
-        duration = duration || 3000;
-        var t = document.getElementById('toast');
-        if (!t) return;
-        t.textContent = msg;
-        t.classList.add('visible');
-        setTimeout(function () { t.classList.remove('visible'); }, duration);
-      };
-    })();
-  </script>
-
-  <!-- 3. Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- 4. Auth + navigacija + modal -->
-  <script>
-  (async function () {
-    await window.__envReady;
-
-    var SUPABASE_URL      = window.__env.SUPABASE_URL;
-    var SUPABASE_ANON_KEY = window.__env.SUPABASE_ANON_KEY;
-
-    var _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window._sb = _sb;
-    window._currentProfile = null;
-
-    var loginScreen = document.getElementById('login-screen');
-    var appShell    = document.getElementById('app-shell');
-    var loginForm   = document.getElementById('login-form');
-    var loginError  = document.getElementById('login-error');
-    var loginBtn    = document.getElementById('login-btn');
-    var noProfile   = document.getElementById('login-no-profile');
-    var btnLogout   = document.getElementById('btn-logout');
-
-    function showLogin() {
-      loginScreen.classList.remove('hidden');
-      appShell.classList.remove('visible');
-    }
-    function showApp() {
-      loginScreen.classList.add('hidden');
-      appShell.classList.add('visible');
-    }
-    function showError(msg) {
-      loginError.textContent = msg;
-      loginError.classList.add('visible');
-      loginBtn.disabled = false;
-      loginBtn.textContent = 'Prijavi se';
-    }
-    function clearErrors() {
-      loginError.classList.remove('visible');
-      loginError.textContent = '';
-      noProfile.classList.remove('visible');
-    }
-
-    async function loadProfile(userId) {
-      dbg('loadProfile: ' + userId);
-      try {
-        var r = await _sb
-          .from('profiles')
-          .select('id, full_name, email, role, is_active, tenant_id')
-          .eq('id', userId)
-          .maybeSingle();
-        if (r.error) { dbg('loadProfile DB: ' + r.error.message); return null; }
-        if (!r.data)  { dbg('loadProfile: nema profila'); return null; }
-        if (!r.data.is_active) { dbg('loadProfile: profil nije aktivan'); return null; }
-        dbg('Profil: ' + r.data.email + ' / ' + r.data.role);
-        return r.data;
-      } catch (err) {
-        dbg('loadProfile exception: ' + err.message);
-        return null;
-      }
-    }
-
-    var ROLE_LABELS = { admin: 'Administrator', user: 'Korisnik', readonly: 'Samo čitanje' };
-
-    function applyProfileToUI(profile) {
-      window._currentProfile = profile;
-      var nameEl = document.getElementById('sidebar-user-name');
-      var roleEl = document.getElementById('sidebar-user-role');
-      if (nameEl) nameEl.textContent = profile.full_name || profile.email || 'Korisnik';
-      if (roleEl) roleEl.textContent = ROLE_LABELS[profile.role] || profile.role || '—';
-    }
-
-    async function handleSessionUser(user) {
-      dbg('handleSessionUser: ' + user.id);
-      var profile = await loadProfile(user.id);
-      if (!profile) {
-        noProfile.classList.add('visible');
-        await _sb.auth.signOut();
-        showLogin();
-        return;
-      }
-      applyProfileToUI(profile);
-      showApp();
-      document.dispatchEvent(new CustomEvent('izvpro:ready', { detail: { user: user, profile: profile } }));
-    }
-
-    _sb.auth.onAuthStateChange(async function (event, session) {
-      dbg('authEvent: ' + event);
-      if (event === 'INITIAL_SESSION') {
-        if (session && session.user) await handleSessionUser(session.user);
-        else showLogin();
-      } else if (event === 'SIGNED_IN' && session && session.user) {
-        await handleSessionUser(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        window._currentProfile = null;
-        showLogin();
-      }
-    });
-
-    loginForm.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      clearErrors();
-      loginBtn.disabled = true;
-      loginBtn.textContent = 'Prijavljivanje...';
-      var email    = document.getElementById('login-email').value.trim();
-      var password = document.getElementById('login-password').value;
-      if (!email || !password) { showError('Unesite e-mail i lozinku.'); return; }
-      dbg('Prijava: ' + email);
-      var res = await _sb.auth.signInWithPassword({ email: email, password: password });
-      if (res.error) {
-        dbg('Auth greska: ' + res.error.message);
-        var m = res.error.message;
-        if (m.includes('Invalid login') || m.includes('invalid_credentials')) m = 'Pogrešan e-mail ili lozinka.';
-        else if (m.includes('Email not confirmed')) m = 'E-mail nije potvrđen. Proverite inbox.';
-        else if (m.includes('Too many')) m = 'Previše pokušaja. Sačekajte nekoliko minuta.';
-        showError(m);
-      }
-    });
-
-    if (btnLogout) {
-      btnLogout.addEventListener('click', async function () {
-        dbg('Odjava...');
-        await _sb.auth.signOut();
-      });
-    }
-
-    document.querySelectorAll('.nav a[data-view]').forEach(function (link) {
-      link.addEventListener('click', function (e) {
-        e.preventDefault();
-        var viewId = link.dataset.view;
-        document.querySelectorAll('.nav a').forEach(function (a) { a.classList.remove('active'); });
-        link.classList.add('active');
-        document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
-        var target = document.getElementById('view-' + viewId);
-        if (target) target.classList.add('active');
-        document.dispatchEvent(new CustomEvent('izvpro:navigate', { detail: { view: viewId } }));
-        dbg('Navigate: ' + viewId);
-      });
-    });
-
-    var modal      = document.getElementById('modal-new-case');
-    var modalError = document.getElementById('modal-error');
-    var FIELDS     = ['case-number','case-debtor','case-creditor','case-amount','case-note','case-filed-date'];
-
-    function openModal() {
-      modal.classList.add('visible');
-      setTimeout(function(){ document.getElementById('case-number').focus(); }, 50);
-    }
-    function closeModal() {
-      modal.classList.remove('visible');
-      modalError.classList.remove('visible');
-      modalError.textContent = '';
-      FIELDS.forEach(function (id) { var el = document.getElementById(id); if (el) el.value = ''; });
-      document.getElementById('case-status').value = 'active';
-    }
-
-    var btnNew    = document.getElementById('btn-new-case');
-    var btnNew2   = document.getElementById('btn-new-case-2');
-    var btnCancel = document.getElementById('btn-modal-cancel');
-    if (btnNew)    btnNew.addEventListener('click', openModal);
-    if (btnNew2)   btnNew2.addEventListener('click', openModal);
-    if (btnCancel) btnCancel.addEventListener('click', closeModal);
-    if (modal) {
-      modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
-      modal.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
-    }
-
-    var saveBtn = document.getElementById('btn-modal-save');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async function () {
-        modalError.classList.remove('visible');
-        var caseNumber = document.getElementById('case-number').value.trim();
-        var debtor     = document.getElementById('case-debtor').value.trim();
-        var creditor   = document.getElementById('case-creditor').value.trim();
-        var status     = document.getElementById('case-status').value;
-        var amount     = document.getElementById('case-amount').value;
-        var note       = document.getElementById('case-note').value.trim() || null;
-        var filedDate  = document.getElementById('case-filed-date').value || null;
-
-        if (!caseNumber || !debtor || !creditor) {
-          modalError.textContent = 'Molimo popunite obavezna polja: Broj predmeta, Dužnik, Poverilac.';
-          modalError.classList.add('visible');
-          return;
-        }
-        var profile = window._currentProfile;
-        if (!profile || !profile.tenant_id) {
-          modalError.textContent = 'Greška: sesija nije validna. Prijavite se ponovo.';
-          modalError.classList.add('visible');
-          return;
-        }
-
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Čuvanje...';
-
-        var res = await _sb.from('cases').insert({
-          tenant_id:   profile.tenant_id,
-          case_number: caseNumber,
-          debtor_name: debtor,
-          creditor:    creditor,
-          status:      status,
-          amount:      amount ? parseFloat(amount) : null,
-          note:        note,
-          filed_date:  filedDate,
-          created_by:  profile.id
-        });
-
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Sačuvaj predmet';
-
-        if (res.error) {
-          dbg('Insert greska: ' + res.error.message);
-          var errMsg = res.error.message;
-          if (errMsg.includes('duplicate') || errMsg.includes('unique'))
-            errMsg = 'Predmet sa ovim brojem već postoji.';
-          modalError.textContent = 'Greška: ' + errMsg;
-          modalError.classList.add('visible');
-          return;
-        }
-
-        closeModal();
-        showToast('✅ Predmet uspešno sačuvan');
-        document.dispatchEvent(new CustomEvent('izvpro:case-created'));
-        dbg('Sacuvan predmet: ' + caseNumber);
-      });
-    }
-
-  })();
-  </script>
-
-  <!-- 5. App logika -->
-  <script src="./app.js"></script>
+<!-- App logika -->
+<script src="./app.js"></script>
 
 </body>
 </html>
