@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+html = open('/dev/stdin', 'r').read() if False else ""
+
+# The HTML content - build the fixed version
+fixed_html = '''<!DOCTYPE html>
 <html lang="sr">
 <head>
   <meta charset="UTF-8" />
@@ -27,7 +30,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Satoshi', sans-serif;
+      font-family: \'Satoshi\', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
@@ -331,12 +334,12 @@
         <div class="form-group">
           <label for="login-password">Lozinka</label>
           <input id="login-password" type="password" name="password"
-            placeholder="••••••••" autocomplete="current-password" required />
+            placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" autocomplete="current-password" required />
         </div>
         <button class="btn-login" id="login-btn" type="submit">Prijavi se</button>
       </form>
       <div class="login-no-profile" id="login-no-profile" role="alert">
-        ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.<br>
+        &#x26A0;&#xFE0F; Korisnik postoji u sistemu, ali nema dodeljen profil.<br>
         Obratite se administratoru sistema.
       </div>
     </div>
@@ -352,20 +355,20 @@
           <div><h1>IZVPRO</h1><p>Upravljanje predmetima</p></div>
         </div>
         <nav class="nav">
-          <a class="active" data-view="dashboard" href="#">📊 Kontrolna tabla</a>
-          <a data-view="cases"     href="#">📁 Predmeti</a>
-          <a data-view="deadlines" href="#">⏰ Rokovi</a>
-          <a data-view="documents" href="#">📄 Dokumenta</a>
+          <a class="active" data-view="dashboard" href="#">&#x1F4CA; Kontrolna tabla</a>
+          <a data-view="cases"     href="#">&#x1F4C1; Predmeti</a>
+          <a data-view="deadlines" href="#">&#x23F0; Rokovi</a>
+          <a data-view="documents" href="#">&#x1F4C4; Dokumenta</a>
         </nav>
         <div class="sidebar-spacer"></div>
         <div class="sidebar-user">
-          <div class="user-name" id="sidebar-user-name">—</div>
-          <div class="user-role" id="sidebar-user-role">—</div>
+          <div class="user-name" id="sidebar-user-name">&#x2014;</div>
+          <div class="user-role" id="sidebar-user-role">&#x2014;</div>
           <button class="btn-logout" id="btn-logout" type="button">Odjavi se</button>
         </div>
         <div class="sidebar-card">
           <h3>Rokovi danas</h3>
-          <strong id="sidebar-today-count">—</strong>
+          <strong id="sidebar-today-count">&#x2014;</strong>
           <p class="meta">stavki traži pažnju</p>
         </div>
       </aside>
@@ -381,34 +384,34 @@
             </div>
           </div>
           <section class="kpis">
-            <div class="card"><h3>Ukupno predmeta</h3><div class="metric" id="kpi-cases">—</div><div class="meta" id="kpi-cases-meta">Učitavanje...</div></div>
-            <div class="card"><h3>Otvoreni rokovi</h3><div class="metric" id="kpi-deadlines">—</div><div class="meta" id="kpi-deadlines-meta">Učitavanje...</div></div>
-            <div class="card"><h3>Dokumenta</h3><div class="metric" id="kpi-docs">—</div><div class="meta" id="kpi-docs-meta">Učitavanje...</div></div>
-            <div class="card"><h3>Predmeti u zastoju</h3><div class="metric" id="kpi-stalled">—</div><div class="meta" id="kpi-stalled-meta">Učitavanje...</div></div>
+            <div class="card"><h3>Ukupno predmeta</h3><div class="metric" id="kpi-cases">&#x2014;</div><div class="meta" id="kpi-cases-meta">U&#269;itavanje...</div></div>
+            <div class="card"><h3>Otvoreni rokovi</h3><div class="metric" id="kpi-deadlines">&#x2014;</div><div class="meta" id="kpi-deadlines-meta">U&#269;itavanje...</div></div>
+            <div class="card"><h3>Dokumenta</h3><div class="metric" id="kpi-docs">&#x2014;</div><div class="meta" id="kpi-docs-meta">U&#269;itavanje...</div></div>
+            <div class="card"><h3>Predmeti u zastoju</h3><div class="metric" id="kpi-stalled">&#x2014;</div><div class="meta" id="kpi-stalled-meta">U&#269;itavanje...</div></div>
           </section>
           <section class="grid-2">
             <div class="card">
               <div class="section-head"><h3>Status predmeta</h3><span class="pill">Pregled</span></div>
               <div class="bars">
-                <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:0%" id="bar-active"></span></div><strong id="bar-active-n">—</strong></div>
-                <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:0%" id="bar-review"></span></div><strong id="bar-review-n">—</strong></div>
-                <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:0%" id="bar-done"></span></div><strong id="bar-done-n">—</strong></div>
-                <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:0%" id="bar-returned"></span></div><strong id="bar-returned-n">—</strong></div>
+                <div class="bar-row"><span>U radu</span><div class="bar"><span style="width:0%" id="bar-active"></span></div><strong id="bar-active-n">&#x2014;</strong></div>
+                <div class="bar-row"><span>Na proveri</span><div class="bar"><span style="width:0%" id="bar-review"></span></div><strong id="bar-review-n">&#x2014;</strong></div>
+                <div class="bar-row"><span>Završeni</span><div class="bar"><span style="width:0%" id="bar-done"></span></div><strong id="bar-done-n">&#x2014;</strong></div>
+                <div class="bar-row"><span>Vraćeni</span><div class="bar"><span style="width:0%" id="bar-returned"></span></div><strong id="bar-returned-n">&#x2014;</strong></div>
               </div>
             </div>
             <div class="card">
               <div class="section-head"><h3>Hitni rokovi</h3><span class="pill">Prioritet</span></div>
               <div class="list" id="urgent-deadlines-list">
-                <div style="color:var(--muted);font-size:14px;padding:8px 0">Učitavanje rokova...</div>
+                <div style="color:var(--muted);font-size:14px;padding:8px 0">U&#269;itavanje rokova...</div>
               </div>
             </div>
           </section>
           <section class="card">
-            <div class="section-head"><h3>Poslednje aktivnosti</h3><span class="pill" id="activity-updated">Učitavanje...</span></div>
+            <div class="section-head"><h3>Poslednje aktivnosti</h3><span class="pill" id="activity-updated">U&#269;itavanje...</span></div>
             <table>
               <thead><tr><th>Predmet</th><th>Radnja</th><th>Korisnik</th><th>Datum</th><th>Status</th></tr></thead>
               <tbody id="activity-table-body">
-                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje aktivnosti...</td></tr>
+                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">U&#269;itavanje aktivnosti...</td></tr>
               </tbody>
             </table>
           </section>
@@ -427,7 +430,7 @@
             <table>
               <thead><tr><th>Broj predmeta</th><th>Dužnik</th><th>Poverilac</th><th>Iznos (RSD)</th><th>Status</th><th>Datum</th></tr></thead>
               <tbody id="cases-table-body">
-                <tr><td colspan="6" style="color:var(--muted);padding:20px 10px">Učitavanje predmeta...</td></tr>
+                <tr><td colspan="6" style="color:var(--muted);padding:20px 10px">U&#269;itavanje predmeta...</td></tr>
               </tbody>
             </table>
           </div>
@@ -442,7 +445,7 @@
             <table>
               <thead><tr><th>Predmet</th><th>Opis roka</th><th>Datum roka</th><th>Preostalo</th><th>Status</th></tr></thead>
               <tbody id="deadlines-table-body">
-                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje rokova...</td></tr>
+                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">U&#269;itavanje rokova...</td></tr>
               </tbody>
             </table>
           </div>
@@ -457,7 +460,7 @@
             <table>
               <thead><tr><th>Naziv dokumenta</th><th>Predmet</th><th>Tip</th><th>Datum</th><th>Status</th></tr></thead>
               <tbody id="documents-table-body">
-                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">Učitavanje dokumenata...</td></tr>
+                <tr><td colspan="5" style="color:var(--muted);padding:20px 10px">U&#269;itavanje dokumenata...</td></tr>
               </tbody>
             </table>
           </div>
@@ -517,18 +520,13 @@
 
   <!-- SCRIPTS -->
 
-  <!-- 1. Env loader -->
+  <!-- 1. Env — direktno hardkodovano, bez /api/env poziva -->
   <script>
-    window.__env = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
-    window.__envReady = (async function () {
-      try {
-        var res = await fetch('/api/env');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        window.__env = await res.json();
-      } catch (e) {
-        console.error('[IZVPRO] Env config nije ucitan:', e.message);
-      }
-    })();
+    window.__env = {
+      SUPABASE_URL: 'https://bwpyivqdinemhfrrjdhu.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k'
+    };
+    window.__envReady = Promise.resolve();
   </script>
 
   <!-- 2. Globals: dbg + showToast -->
@@ -562,12 +560,8 @@
   (async function () {
     await window.__envReady;
 
-    var SUPABASE_URL      = (window.__env && window.__env.SUPABASE_URL)      || '';
-    var SUPABASE_ANON_KEY = (window.__env && window.__env.SUPABASE_ANON_KEY) || '';
-
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      console.error('[IZVPRO] Supabase env nije konfigurisan!');
-    }
+    var SUPABASE_URL      = window.__env.SUPABASE_URL;
+    var SUPABASE_ANON_KEY = window.__env.SUPABASE_ANON_KEY;
 
     var _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window._sb = _sb;
@@ -778,7 +772,7 @@
         }
 
         closeModal();
-        showToast('✅ Predmet uspešno sačuvan');
+        showToast('&#x2705; Predmet uspešno sačuvan');
         document.dispatchEvent(new CustomEvent('izvpro:case-created'));
         dbg('Sacuvan predmet: ' + caseNumber);
       });
@@ -791,4 +785,9 @@
   <script src="./app.js"></script>
 
 </body>
-</html>
+</html>'''
+
+with open('/root/index.html', 'w', encoding='utf-8') as f:
+    f.write(fixed_html)
+
+print("index.html napisan, duzina:", len(fixed_html), "karaktera")
