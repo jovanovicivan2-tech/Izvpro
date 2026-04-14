@@ -1,0 +1,16 @@
+export default function RokoviPage() {
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Rokovi</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Pregled rokova: danas, sutra, ova nedelja</p>
+      </div>
+      <div
+        className="rounded-xl border p-5"
+        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+      >
+        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Kalendar rokova — u razvoju</p>
+      </div>
+    </div>
+  );
+}
