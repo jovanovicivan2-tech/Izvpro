@@ -99,8 +99,7 @@
     tr:hover td{background:#faf9f6}
     #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:white;padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9000;white-space:nowrap}
     #toast.visible{opacity:1}
-    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-    #debug-box{position:fixed;bottom:16px;right:16px;background:#1a1a1a;color:#00ff88;font-family:monospace;font-size:12px;padding:12px 16px;border-radius:10px;max-width:400px;max-height:200px;overflow-y:auto;z-index:9999;display:none}
+    #sdk-error-banner{display:none;position:fixed;top:0;left:0;right:0;background:#a33f52;color:white;text-align:center;padding:14px 20px;font-size:14px;font-family:'Satoshi',sans-serif;z-index:99999}
     @media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;padding:16px;border-right:none;border-bottom:1px solid var(--border)}.brand{margin-bottom:0}.nav{flex-direction:row;gap:4px;margin-bottom:0}.nav a{padding:8px 12px;font-size:13px}.sidebar-user,.sidebar-card,.sidebar-spacer{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}.topbar{flex-direction:column;align-items:flex-start}}
     @media(max-width:540px){.kpis{grid-template-columns:1fr}.content{padding:16px}.login-card{padding:28px 20px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -108,7 +107,10 @@
 </head>
 <body>
 
-<div id="debug-box"></div>
+<div id="sdk-error-banner">
+  ⚠️ Supabase SDK nije mogao da se učita (CDN blokiran). Pokušaj u drugom browseru ili isključi Tracking Prevention za ovaj sajt.
+</div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <!-- LOGIN -->
@@ -133,7 +135,8 @@
       <button class="btn-login" id="login-btn" type="submit">Prijavi se</button>
     </form>
     <div class="login-no-profile" id="login-no-profile" role="alert">
-      ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.<br>Obratite se administratoru sistema.
+      ⚠️ Korisnik postoji u sistemu, ali nema dodeljen profil.
+      Obratite se administratoru sistema.
     </div>
   </div>
 </div>
@@ -251,10 +254,7 @@
   </div>
 </div>
 
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Konfiguracija — bez /api/env -->
+<!-- Supabase SDK: unpkg primarni, esm.sh fallback -->
 <script>
   window.__env = {
     SUPABASE_URL: 'https://bwpyivqdinemhfrrjdhu.supabase.co',
@@ -262,8 +262,25 @@
   };
 </script>
 
-<!-- App logika -->
-<script src="./app.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"
+        onerror="loadSupabaseFallback()"></script>
+
+<script>
+  function loadSupabaseFallback() {
+    console.warn('[IZVPRO] unpkg blokiran, pokušavam esm.sh fallback...');
+    var s = document.createElement('script');
+    s.src = 'https://esm.sh/@supabase/supabase-js@2';
+    s.type = 'module';
+    s.onerror = function() {
+      document.getElementById('sdk-error-banner').style.display = 'block';
+      var btn = document.getElementById('login-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'SDK nije dostupan'; }
+    };
+    document.head.appendChild(s);
+  }
+</script>
+
+<script src="./app.js" defer></script>
 
 </body>
 </html>
