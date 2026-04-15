@@ -1,12 +1,14 @@
-'use client';
-
-import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { loginAction } from './actions';
 
-function LoginForm() {
-  const searchParams = useSearchParams();
-  const hasError = searchParams.get('error') === 'invalid_credentials';
+interface LoginPageProps {
+  searchParams: Promise<{ error?: string }>;
+}
+
+async function LoginForm({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const params = await searchParams;
+  const hasError = params.error === 'invalid_credentials';
+  const hasMissingFields = params.error === 'missing_fields';
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
@@ -35,12 +37,12 @@ function LoginForm() {
             borderColor: 'var(--color-border)',
           }}
         >
-          {hasError && (
+          {(hasError || hasMissingFields) && (
             <div
               className="mb-4 px-4 py-3 rounded-lg text-sm"
               style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
             >
-              Pogrešan email ili lozinka.
+              {hasMissingFields ? 'Unesite email i lozinku.' : 'Pogrešan email ili lozinka.'}
             </div>
           )}
 
@@ -108,10 +110,10 @@ function LoginForm() {
   );
 }
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <Suspense>
-      <LoginForm />
+      <LoginForm searchParams={searchParams} />
     </Suspense>
   );
 }
