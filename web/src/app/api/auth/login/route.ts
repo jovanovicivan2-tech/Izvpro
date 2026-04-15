@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { CookieOptions } from '@supabase/ssr';
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
@@ -16,9 +17,9 @@ export async function POST(request: NextRequest) {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
+            response.cookies.set(name, value, options as any);
           });
         },
       },
