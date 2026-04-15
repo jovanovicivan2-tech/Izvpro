@@ -1,37 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { loginAction } from './actions';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError || !data.session) {
-      setError('Pogrešan email ili lozinka.');
-      setLoading(false);
-      return;
-    }
-
-    window.location.replace('/dashboard');
-  }
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const hasError = searchParams.get('error') === 'invalid_credentials';
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
@@ -52,7 +27,7 @@ export default function LoginPage() {
         </div>
 
         <form
-          onSubmit={handleLogin}
+          action={loginAction}
           autoComplete="on"
           className="rounded-2xl p-6 border"
           style={{
@@ -60,12 +35,12 @@ export default function LoginPage() {
             borderColor: 'var(--color-border)',
           }}
         >
-          {error && (
+          {hasError && (
             <div
               className="mb-4 px-4 py-3 rounded-lg text-sm"
               style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
             >
-              {error}
+              Pogrešan email ili lozinka.
             </div>
           )}
 
@@ -83,8 +58,6 @@ export default function LoginPage() {
               type="email"
               required
               autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="ime@kancelarija.rs"
               className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-all"
               style={{
@@ -109,8 +82,6 @@ export default function LoginPage() {
               type="password"
               required
               autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-all"
               style={{
@@ -123,17 +94,24 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
             className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-all"
             style={{
-              background: loading ? 'var(--color-text-faint)' : 'var(--color-primary)',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              background: 'var(--color-primary)',
+              cursor: 'pointer',
             }}
           >
-            {loading ? 'Prijavljivanje...' : 'Prijavi se'}
+            Prijavi se
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
