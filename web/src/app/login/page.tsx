@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import { loginAction } from './actions';
 
 interface LoginPageProps {
   searchParams: Promise<{ error?: string }>;
@@ -29,7 +28,8 @@ async function LoginForm({ searchParams }: { searchParams: Promise<{ error?: str
         </div>
 
         <form
-          action={loginAction}
+          method="POST"
+          action="/api/auth/login"
           autoComplete="on"
           className="rounded-2xl p-6 border"
           style={{
