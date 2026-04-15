@@ -204,7 +204,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <ul style={{ listStyle: 'none', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {(hitniRokovi as (Rok & { predmeti: { broj_predmeta: string; godina: number; duznik: string } | null })[]).map((r) => {
+              {(hitniRokovi as unknown as (Rok & { predmeti: { broj_predmeta: string; godina: number; duznik: string } | null })[]).map((r) => {
                 const days = daysUntil(r.datum_roka);
                 const borderColor = PRIORITET_BORDER[r.prioritet] ?? 'var(--color-border)';
                 const daysLabel = days === 0 ? 'Danas' : days === 1 ? 'Sutra' : `Za ${days} d.`;
