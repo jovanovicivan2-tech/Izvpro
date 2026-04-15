@@ -8,6 +8,10 @@ export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
+  if (!email || !password) {
+    redirect('/login?error=missing_fields');
+  }
+
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -19,9 +23,13 @@ export async function loginAction(formData: FormData) {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // U Server Component kontekstu set() baca — middleware ce osveziti sesiju
+          }
         },
       },
     }
