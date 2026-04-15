@@ -1,16 +1,19 @@
 // Tipovi za IZVPRO bazu podataka
-// Uskladiti sa Supabase schemom
+// Uskladjeno sa stvarnim kolonama u Supabase
 
 export type UserRole = 'admin' | 'operater' | 'pregled';
 
-export type CaseStatus = 'nov' | 'u_radu' | 'ceka_dopunu' | 'zavrsen';
+export type PredmetStatus = 'aktivan' | 'obustavljen' | 'zavrsen' | 'arhiviran';
 
-export type DeadlineStatus = 'aktivan' | 'hitan' | 'zavrsen';
+export type RokStatus = 'aktivan' | 'hitan' | 'zavrsen';
 
-export type DeadlinePriority = 'nizak' | 'srednji' | 'visok' | 'hitan';
+export type RokPrioritet = 'nizak' | 'srednji' | 'visok' | 'hitan';
 
-export type DraftType = 'dopis' | 'zakljucak' | 'resenje' | 'obavestenje';
+export type TipAkta = 'dopis' | 'zakljucak' | 'resenje' | 'obavestenje';
 
+// -------------------------------------------------------
+// Tabela: offices (kancelarije)
+// -------------------------------------------------------
 export interface Office {
   id: string;
   naziv: string;
@@ -20,59 +23,79 @@ export interface Office {
   created_at: string;
 }
 
-export interface User {
-  id: string;
+// -------------------------------------------------------
+// Tabela: korisnici
+// -------------------------------------------------------
+export interface Korisnik {
+  id: string;           // = auth.users.id
   office_id: string;
   ime_prezime: string;
   email: string;
   role: UserRole;
-  active: boolean;
+  aktivan: boolean;
   created_at: string;
 }
 
-export interface Case {
+// -------------------------------------------------------
+// Tabela: predmeti
+// Kolone uskladjene sa predmeti/page.tsx queryjima
+// -------------------------------------------------------
+export interface Predmet {
   id: string;
   office_id: string;
   broj_predmeta: string;
-  datum_prijema: string;
+  godina: number;
   poverilac: string;
   duznik: string;
-  adresa_duznika: string | null;
-  iznos: number;
+  duznik_adresa: string | null;
+  iznos_glavnice: number | null;
   vrsta_predmeta: string | null;
-  status: CaseStatus;
-  opis: string | null;
+  status: PredmetStatus;
+  rok_sledece_radnje: string | null;  // ISO date string
+  napomena: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface Deadline {
+// -------------------------------------------------------
+// Tabela: rokovi
+// -------------------------------------------------------
+export interface Rok {
   id: string;
-  case_id: string;
+  predmet_id: string;
+  office_id: string;
   naziv_roka: string;
-  datum_roka: string;
-  status: DeadlineStatus;
-  prioritet: DeadlinePriority;
+  datum_roka: string;   // ISO date string
+  status: RokStatus;
+  prioritet: RokPrioritet;
+  napomena: string | null;
   created_at: string;
 }
 
-export interface Draft {
+// -------------------------------------------------------
+// Tabela: nacrti
+// -------------------------------------------------------
+export interface Nacrt {
   id: string;
-  case_id: string;
-  tip_akta: DraftType;
-  template_id: string | null;
+  predmet_id: string;
+  office_id: string;
+  sablon_id: string | null;
+  tip_akta: TipAkta;
   generated_text: string;
   edited_text: string | null;
-  created_by: string;
+  created_by: string;   // = korisnici.id
   created_at: string;
 }
 
-export interface Template {
+// -------------------------------------------------------
+// Tabela: sabloni
+// -------------------------------------------------------
+export interface Sablon {
   id: string;
   office_id: string;
   naziv: string;
-  tip_akta: DraftType;
+  tip_akta: TipAkta;
   template_text: string;
-  active: boolean;
+  aktivan: boolean;
   created_at: string;
 }
