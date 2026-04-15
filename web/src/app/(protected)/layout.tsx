@@ -1,1 +1,25 @@
-aW1wb3J0IHsgY3JlYXRlQ2xpZW50IH0gZnJvbSAnQC9saWIvc3VwYWJhc2Uvc2VydmVyJzsKaW1wb3J0IHsgcmVkaXJlY3QgfSBmcm9tICduZXh0L25hdmlnYXRpb24nOwppbXBvcnQgU2lkZWJhciBmcm9tICdAL2NvbXBvbmVudHMvbGF5b3V0L1NpZGViYXInOwoKZXhwb3J0IGRlZmF1bHQgYXN5bmMgZnVuY3Rpb24gUHJvdGVjdGVkTGF5b3V0KHsKICBjaGlsZHJlbiwKfTogewogIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7Cn0pIHsKICBjb25zdCBzdXBhYmFzZSA9IGF3YWl0IGNyZWF0ZUNsaWVudCgpOwogIGNvbnN0IHsgZGF0YTogeyB1c2VyIH0gfSA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0VXNlcigpOwoKICBpZiAoIXVzZXIpIHsKICAgIHJlZGlyZWN0KCcvbG9naW4nKTsKICB9CgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBtaW4taC1zY3JlZW4iIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1jb2xvci1iZyknIH19PgogICAgICA8U2lkZWJhciAvPgogICAgICA8bWFpbiBjbGFzc05hbWU9ImZsZXgtMSBtaW4tdy0wIHAtNiI+CiAgICAgICAge2NoaWxkcmVufQogICAgICA8L21haW4+CiAgICA8L2Rpdj4KICApOwp9Cg==
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar';
+
+export default async function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  return (
+    <div className="flex min-h-screen" style={{ background: 'var(--color-bg)' }}>
+      <Sidebar />
+      <main className="flex-1 min-w-0 p-6">
+        {children}
+      </main>
+    </div>
+  );
+}
