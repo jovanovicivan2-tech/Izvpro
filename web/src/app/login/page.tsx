@@ -70,10 +70,16 @@ export default function LoginPage() {
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
+            <label
+              htmlFor="login-email"
+              className="block text-sm font-semibold mb-1.5"
+              style={{ color: 'var(--color-text)' }}
+            >
               Email adresa
             </label>
             <input
+              id="login-email"
+              name="email"
               type="email"
               required
               autoComplete="username"
@@ -90,10 +96,16 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
+            <label
+              htmlFor="login-password"
+              className="block text-sm font-semibold mb-1.5"
+              style={{ color: 'var(--color-text)' }}
+            >
               Lozinka
             </label>
             <input
+              id="login-password"
+              name="password"
               type="password"
               required
               autoComplete="current-password"
