@@ -30,7 +30,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Hard reload - forsira browser da ponovo ucita stranicu sa svezim cookie-jem
     window.location.replace('/dashboard');
   }
 
@@ -54,6 +53,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleLogin}
+          autoComplete="on"
           className="rounded-2xl p-6 border"
           style={{
             background: 'var(--color-surface)',
@@ -76,6 +76,7 @@ export default function LoginPage() {
             <input
               type="email"
               required
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ime@kancelarija.rs"
@@ -95,6 +96,7 @@ export default function LoginPage() {
             <input
               type="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
