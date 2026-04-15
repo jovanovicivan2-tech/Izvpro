@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
-  const supabase = createClient();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,12 +13,13 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (error) {
+    if (!res.ok) {
       setError('Pogrešan email ili lozinka.');
       setLoading(false);
       return;
@@ -33,7 +31,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div
             className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4"
@@ -49,7 +46,6 @@ export default function LoginPage() {
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Prijavite se na vaš nalog</p>
         </div>
 
-        {/* Forma */}
         <form
           onSubmit={handleLogin}
           className="rounded-2xl p-6 border"
