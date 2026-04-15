@@ -1,13 +1,31 @@
-import { Suspense } from 'react';
+'use client';
 
-interface LoginPageProps {
-  searchParams: Promise<{ error?: string }>;
-}
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
-async function LoginForm({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const params = await searchParams;
-  const hasError = params.error === 'invalid_credentials';
-  const hasMissingFields = params.error === 'missing_fields';
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setError('Pogrešan email ili lozinka.');
+      setLoading(false);
+      return;
+    }
+
+    // Hard redirect — zaobilazi Next.js router
+    window.location.href = '/predmeti';
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
@@ -28,92 +46,63 @@ async function LoginForm({ searchParams }: { searchParams: Promise<{ error?: str
         </div>
 
         <form
-          method="POST"
-          action="/api/auth/login"
-          autoComplete="on"
+          onSubmit={handleSubmit}
           className="rounded-2xl p-6 border"
-          style={{
-            background: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-          }}
+          style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         >
-          {(hasError || hasMissingFields) && (
+          {error && (
             <div
               className="mb-4 px-4 py-3 rounded-lg text-sm"
               style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
             >
-              {hasMissingFields ? 'Unesite email i lozinku.' : 'Pogrešan email ili lozinka.'}
+              {error}
             </div>
           )}
 
           <div className="mb-4">
-            <label
-              htmlFor="login-email"
-              className="block text-sm font-semibold mb-1.5"
-              style={{ color: 'var(--color-text)' }}
-            >
+            <label htmlFor="email" className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
               Email adresa
             </label>
             <input
-              id="login-email"
-              name="email"
+              id="email"
               type="email"
               required
               autoComplete="username"
               placeholder="ime@kancelarija.rs"
-              className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-all"
-              style={{
-                background: 'var(--color-surface-2)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
+              style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
             />
           </div>
 
           <div className="mb-6">
-            <label
-              htmlFor="login-password"
-              className="block text-sm font-semibold mb-1.5"
-              style={{ color: 'var(--color-text)' }}
-            >
+            <label htmlFor="password" className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
               Lozinka
             </label>
             <input
-              id="login-password"
-              name="password"
+              id="password"
               type="password"
               required
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-all"
-              style={{
-                background: 'var(--color-surface-2)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
+              style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-all"
-            style={{
-              background: 'var(--color-primary)',
-              cursor: 'pointer',
-            }}
+            disabled={loading}
+            className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+            style={{ background: 'var(--color-primary)', opacity: loading ? 0.7 : 1, cursor: loading ? 'wait' : 'pointer' }}
           >
-            Prijavi se
+            {loading ? 'Prijava...' : 'Prijavi se'}
           </button>
         </form>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage({ searchParams }: LoginPageProps) {
-  return (
-    <Suspense>
-      <LoginForm searchParams={searchParams} />
-    </Suspense>
   );
 }

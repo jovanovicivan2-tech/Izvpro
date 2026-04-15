@@ -18,6 +18,7 @@
   --color-success: #437a22;
   --color-warning: #964219;
   --color-error: #a12c7b;
+  --color-error-highlight: rgba(161, 44, 123, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,6 +38,7 @@
     --color-success: #6daa45;
     --color-warning: #bb653b;
     --color-error: #d163a7;
+    --color-error-highlight: rgba(209, 99, 167, 0.1);
   }
 }
 
