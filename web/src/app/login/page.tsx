@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 
 export default function LoginPage() {
@@ -9,7 +8,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -21,19 +19,19 @@ export default function LoginPage() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (authError) {
+    if (authError || !data.session) {
       setError('Pogrešan email ili lozinka.');
       setLoading(false);
       return;
     }
 
-    router.refresh();
-    router.push('/dashboard');
+    // Hard reload - forsira browser da ponovo ucita stranicu sa svezim cookie-jem
+    window.location.replace('/dashboard');
   }
 
   return (
