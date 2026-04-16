@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+const PROOF_SHA = 'b276058';
+
 export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -25,7 +27,6 @@ export async function loginAction(formData: FormData) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // --- getAll/setAll (koristi middleware i server components) ---
         getAll() {
           return cookieStore.getAll();
         },
@@ -41,18 +42,18 @@ export async function loginAction(formData: FormData) {
             }
           });
         },
-        // --- get/set/remove (@supabase/ssr@0.3.0 storage.setItem koristi ovaj interfejs) ---
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
           cookiesWritten.push(name);
-          console.log('[AUTH-DIAG][loginAction] set() called for:', name);
+          // === PROOF MARKER ===
+          console.log(`[LOGIN-WRITE-PROOF][v1][${PROOF_SHA}] set() ENTRY name=${name}`);
           try {
             cookieStore.set(name, value, options);
-            console.log('[AUTH-DIAG][loginAction] set() SET OK:', name);
+            console.log(`[LOGIN-WRITE-PROOF][v1][${PROOF_SHA}] set() OK name=${name}`);
           } catch (e) {
-            console.error('[AUTH-DIAG][loginAction] set() SET FAILED:', name, String(e));
+            console.log(`[LOGIN-WRITE-PROOF][v1][${PROOF_SHA}] set() FAILED name=${name} err=${String(e)}`);
           }
         },
         remove(name: string, options: CookieOptions) {
