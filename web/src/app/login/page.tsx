@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { loginAction } from './actions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,17 +14,16 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const formData = new FormData();
+    formData.set('email', email);
+    formData.set('password', password);
 
-    if (error) {
-      setError('Pogrešan email ili lozinka.');
+    const result = await loginAction(formData);
+    if (result?.error) {
+      setError(result.error);
       setLoading(false);
-      return;
     }
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    window.location.href = '/predmeti';
+    // Na uspeh: server action izvrsava redirect('/dashboard') - browser prati automatski
   }
 
   return (
