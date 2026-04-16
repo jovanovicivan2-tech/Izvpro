@@ -4,8 +4,6 @@ import { redirect } from 'next/navigation';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-const PROOF_SHA = '5a15d0d';
-
 export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -16,8 +14,8 @@ export async function loginAction(formData: FormData) {
 
   const cookieStore = await cookies();
 
-  const beforeCookies = cookieStore.getAll();
-  console.log('[AUTH-DIAG][loginAction] cookies BEFORE signIn:', beforeCookies.map(c => c.name));
+  console.log('[TRACE][login] start email=' + email);
+  console.log('[TRACE][login] cookies_before=[' + cookieStore.getAll().map(c => c.name).join(',') + ']');
 
   let cookiesWritten: string[] = [];
 
@@ -30,16 +28,12 @@ export async function loginAction(formData: FormData) {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          // === PROOF MARKER — ENTRY ===
-          console.log(`[LOGIN-SETALL-PROOF][v1][${PROOF_SHA}] ENTRY count=${cookiesToSet.length}`);
           cookiesWritten = cookiesToSet.map(c => c.name);
           cookiesToSet.forEach(({ name, value, options }) => {
             try {
               cookieStore.set(name, value, options);
-              // === PROOF MARKER — PER COOKIE ===
-              console.log(`[LOGIN-SETALL-PROOF][v1][${PROOF_SHA}] SET OK name=${name}`);
             } catch (e) {
-              console.error('[AUTH-DIAG][loginAction] setAll SET FAILED:', name, String(e));
+              console.log('[TRACE][login] cookie_set_failed name=' + name + ' err=' + String(e));
             }
           });
         },
@@ -51,14 +45,14 @@ export async function loginAction(formData: FormData) {
           try {
             cookieStore.set(name, value, options);
           } catch (e) {
-            console.error('[AUTH-DIAG][loginAction] set() FAILED:', name, String(e));
+            console.log('[TRACE][login] cookie_set_failed name=' + name + ' err=' + String(e));
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set(name, '', { ...options, maxAge: 0 });
           } catch (e) {
-            console.error('[AUTH-DIAG][loginAction] remove() FAILED:', name, String(e));
+            console.log('[TRACE][login] cookie_remove_failed name=' + name + ' err=' + String(e));
           }
         },
       },
@@ -67,20 +61,14 @@ export async function loginAction(formData: FormData) {
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  console.log('[AUTH-DIAG][loginAction] signInWithPassword result:', {
-    hasSession: !!data?.session,
-    hasUser: !!data?.user,
-    userId: data?.user?.id ?? null,
-    error: error?.message ?? null,
-    cookiesWritten,
-  });
+  console.log('[TRACE][login] signIn hasSession=' + !!data?.session + ' hasUser=' + !!data?.user + ' userId=' + (data?.user?.id ?? 'null') + ' error=' + (error?.message ?? 'none'));
+  console.log('[TRACE][login] cookies_written=[' + cookiesWritten.join(',') + ']');
 
   if (error) {
+    console.log('[TRACE][login] redirect=/login?error=invalid_credentials');
     redirect('/login?error=invalid_credentials');
   }
 
-  const afterCookies = cookieStore.getAll();
-  console.log('[AUTH-DIAG][loginAction] cookies AFTER signIn (pre-redirect):', afterCookies.map(c => c.name));
-
+  console.log('[TRACE][login] redirect=/dashboard');
   redirect('/dashboard');
 }

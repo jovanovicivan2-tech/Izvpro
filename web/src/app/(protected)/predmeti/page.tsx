@@ -44,6 +44,7 @@ function isRokUskoro(rok: string | null): boolean {
 }
 
 export default async function PredmetiPage() {
+  console.log('[TRACE][page] render path=/predmeti');
   // Dohvati tenant kontekst — ako nema korisnika ili office_id, redirect na /login
   const { officeId } = await requireTenantContext();
 

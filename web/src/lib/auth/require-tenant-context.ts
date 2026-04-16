@@ -17,24 +17,21 @@ export interface TenantContext {
 export async function requireTenantContext(): Promise<TenantContext> {
   const supabase = await createClient();
 
-  console.log('[AUTH-DIAG][TenantContext] entered — calling getUser()');
+  console.log('[TRACE][tenant] enter getUser');
 
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
 
-  console.log('[AUTH-DIAG][TenantContext] getUser result:', {
-    userId: user?.id ?? 'NULL',
-    error: authError?.message ?? null,
-  });
+  console.log('[TRACE][tenant] getUser userId=' + (user?.id ?? 'null') + ' error=' + (authError?.message ?? 'none'));
 
   if (authError || !user) {
-    console.log('[AUTH-DIAG][TenantContext] no user — redirecting to /login');
+    console.log('[TRACE][tenant] no_user redirect=/login');
     redirect('/login');
   }
 
-  console.log('[AUTH-DIAG][TenantContext] querying korisnici for user:', user!.id);
+  console.log('[TRACE][tenant] query korisnici userId=' + user!.id);
 
   const { data: profile, error: profileError } = await supabase
     .from('korisnici')
@@ -42,18 +39,14 @@ export async function requireTenantContext(): Promise<TenantContext> {
     .eq('id', user!.id)
     .single();
 
-  console.log('[AUTH-DIAG][TenantContext] korisnici result:', {
-    officeId: profile?.office_id ?? 'NULL',
-    error: profileError?.message ?? null,
-    errorCode: profileError?.code ?? null,
-  });
+  console.log('[TRACE][tenant] korisnici officeId=' + (profile?.office_id ?? 'null') + ' error=' + (profileError?.message ?? 'none') + ' code=' + (profileError?.code ?? 'none'));
 
   if (profileError || !profile?.office_id) {
-    console.log('[AUTH-DIAG][TenantContext] no office_id — redirecting to /login');
+    console.log('[TRACE][tenant] no_office_id redirect=/login');
     redirect('/login');
   }
 
-  console.log('[AUTH-DIAG][TenantContext] OK — returning context for office:', profile!.office_id);
+  console.log('[TRACE][tenant] ok officeId=' + profile!.office_id);
 
   return {
     userId: user!.id,

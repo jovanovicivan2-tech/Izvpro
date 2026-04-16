@@ -34,6 +34,7 @@ const PRIORITET_BORDER: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
+  console.log('[TRACE][page] render path=/dashboard');
   const { officeId, userEmail } = await requireTenantContext();
   const supabase = await createClient();
 
