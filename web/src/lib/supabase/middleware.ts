@@ -7,6 +7,7 @@ export async function updateSession(request: NextRequest) {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
+    console.log('[DIAG][middleware] MISSING env vars — NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
     return NextResponse.next({ request });
   }
 
@@ -31,17 +32,19 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // DIAG: koje cookie-je middleware vidi na ovom requestu
   const incomingCookieNames = request.cookies.getAll().map(c => c.name);
   const hasSupabaseCookie = incomingCookieNames.some(n => n.includes('supabase') || n.includes('sb-'));
   console.log(`[DIAG][middleware] path: ${pathname}`);
-  console.log(`[DIAG][middleware] incoming cookies:`, incomingCookieNames);
+  console.log(`[DIAG][middleware] cookies: [${incomingCookieNames.join(', ')}]`);
   console.log(`[DIAG][middleware] hasSupabaseCookie: ${hasSupabaseCookie}`);
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
 
-  // DIAG: rezultat getUser
-  console.log(`[DIAG][middleware] getUser result: userId=${user?.id ?? 'null'}, email=${user?.email ?? 'null'}`);
+  if (getUserError) {
+    console.log(`[DIAG][middleware] getUser ERROR: message="${getUserError.message}" status=${(getUserError as any).status ?? 'n/a'}`);
+  } else {
+    console.log(`[DIAG][middleware] getUser OK: userId=${user?.id ?? 'null'} email=${user?.email ?? 'null'}`);
+  }
 
   const isPublicPath =
     pathname.startsWith('/login') ||
@@ -49,15 +52,13 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/demo') ||
     pathname === '/';
 
-  console.log(`[DIAG][middleware] isPublicPath: ${isPublicPath}, user: ${user ? 'PRESENT' : 'NULL'}`);
-
   if (!user && !isPublicPath) {
-    console.log(`[DIAG][middleware] REDIRECTING to /login (no user on protected path: ${pathname})`);
+    console.log(`[DIAG][middleware] DECISION: REDIRECTING to /login — no user on protected path: ${pathname}`);
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  console.log(`[DIAG][middleware] PASSING through: ${pathname}`);
+  console.log(`[DIAG][middleware] DECISION: PASSING through: ${pathname}`);
   return supabaseResponse;
 }
