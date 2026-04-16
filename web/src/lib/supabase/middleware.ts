@@ -15,6 +15,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
+      // --- getAll/setAll (bulk interface) ---
       getAll() {
         return request.cookies.getAll();
       },
@@ -26,6 +27,21 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options)
         );
+      },
+      // --- get/set/remove (@supabase/ssr@0.3.0 storage.setItem uses this interface) ---
+      get(name: string) {
+        return request.cookies.get(name)?.value;
+      },
+      set(name: string, value: string, options: Partial<ResponseCookie>) {
+        console.log('[DIAG][middleware] set() called for:', name);
+        request.cookies.set(name, value);
+        supabaseResponse = NextResponse.next({ request });
+        supabaseResponse.cookies.set(name, value, options);
+      },
+      remove(name: string, options: Partial<ResponseCookie>) {
+        request.cookies.set(name, '');
+        supabaseResponse = NextResponse.next({ request });
+        supabaseResponse.cookies.set(name, '', { ...options, maxAge: 0 });
       },
     },
   });
