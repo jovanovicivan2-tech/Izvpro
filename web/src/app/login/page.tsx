@@ -1,30 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { loginAction } from './actions';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.set('email', email);
-    formData.set('password', password);
-
-    const result = await loginAction(formData);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    }
-    // Na uspeh: server action izvrsava redirect('/dashboard') - browser prati automatski
-  }
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
@@ -45,16 +26,16 @@ export default function LoginPage() {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          action={loginAction}
           className="rounded-2xl p-6 border"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         >
-          {error && (
+          {error === 'invalid_credentials' && (
             <div
               className="mb-4 px-4 py-3 rounded-lg text-sm"
               style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
             >
-              {error}
+              Pogrešan email ili lozinka.
             </div>
           )}
 
@@ -64,12 +45,11 @@ export default function LoginPage() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               required
               autoComplete="username"
               placeholder="ime@kancelarija.rs"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
               style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
             />
@@ -81,12 +61,11 @@ export default function LoginPage() {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
               required
               autoComplete="current-password"
               placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
               className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
               style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
             />
@@ -94,11 +73,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
             className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
-            style={{ background: 'var(--color-primary)', opacity: loading ? 0.7 : 1, cursor: loading ? 'wait' : 'pointer' }}
+            style={{ background: 'var(--color-primary)', cursor: 'pointer' }}
           >
-            {loading ? 'Prijava...' : 'Prijavi se'}
+            Prijavi se
           </button>
         </form>
       </div>
