@@ -16,7 +16,7 @@ export async function loginAction(formData: FormData) {
 
   // DIAG: cookie-ji pre loginAction
   const beforeCookies = cookieStore.getAll();
-  console.log('[DIAG][loginAction] cookies BEFORE signIn:', beforeCookies.map(c => c.name));
+  console.log('[AUTH-DIAG][loginAction] cookies BEFORE signIn:', beforeCookies.map(c => c.name));
 
   let cookiesWritten: string[] = [];
 
@@ -29,15 +29,14 @@ export async function loginAction(formData: FormData) {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          // DIAG: beleži koji cookie-ji se pokušavaju upisati
           cookiesWritten = cookiesToSet.map(c => c.name);
-          console.log('[DIAG][loginAction] setAll called, cookies to set:', cookiesWritten);
+          console.log('[AUTH-DIAG][loginAction] setAll called, cookies to set:', cookiesWritten);
           cookiesToSet.forEach(({ name, value, options }) => {
             try {
               cookieStore.set(name, value, options);
-              console.log('[DIAG][loginAction] cookie SET OK:', name);
+              console.log('[AUTH-DIAG][loginAction] cookie SET OK:', name);
             } catch (e) {
-              console.error('[DIAG][loginAction] cookie SET FAILED:', name, e);
+              console.error('[AUTH-DIAG][loginAction] cookie SET FAILED:', name, String(e));
             }
           });
         },
@@ -47,8 +46,7 @@ export async function loginAction(formData: FormData) {
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  // DIAG: rezultat signIn
-  console.log('[DIAG][loginAction] signInWithPassword result:', {
+  console.log('[AUTH-DIAG][loginAction] signInWithPassword result:', {
     hasSession: !!data?.session,
     hasUser: !!data?.user,
     userId: data?.user?.id ?? null,
@@ -60,9 +58,8 @@ export async function loginAction(formData: FormData) {
     redirect('/login?error=invalid_credentials');
   }
 
-  // DIAG: cookie-ji posle signIn, neposredno pre redirect-a
   const afterCookies = cookieStore.getAll();
-  console.log('[DIAG][loginAction] cookies AFTER signIn (pre-redirect):', afterCookies.map(c => c.name));
+  console.log('[AUTH-DIAG][loginAction] cookies AFTER signIn (pre-redirect):', afterCookies.map(c => c.name));
 
   redirect('/dashboard');
 }
