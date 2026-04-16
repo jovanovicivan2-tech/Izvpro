@@ -4,12 +4,14 @@ import { redirect } from 'next/navigation';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export async function loginAction(formData: FormData) {
+export async function loginAction(
+  formData: FormData
+): Promise<{ error: string } | never> {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
   if (!email || !password) {
-    redirect('/login?error=missing_fields');
+    return { error: 'Unesite email i lozinku.' };
   }
 
   const cookieStore = await cookies();
@@ -38,7 +40,7 @@ export async function loginAction(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect('/login?error=invalid_credentials');
+    return { error: 'Pogrešan email ili lozinka.' };
   }
 
   redirect('/dashboard');
