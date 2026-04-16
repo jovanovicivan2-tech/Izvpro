@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -24,7 +23,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Hard redirect — zaobilazi Next.js router
+    await new Promise(resolve => setTimeout(resolve, 500));
     window.location.href = '/predmeti';
   }
 
