@@ -104,8 +104,8 @@ async function loadCurrentProfile() {
     if (authError || !user) return null;
 
     const { data, error } = await db
-      .from('profiles')
-      .select('id, full_name, email, role, is_active, tenant_id')
+      .from('korisnici')
+      .select('id, office_id, ime_prezime, email, role, aktivan')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -124,7 +124,7 @@ async function loadCurrentProfile() {
     }
 
     if (!data) {
-      console.warn('[IZVPRO] Profil nije pronađen za user:', user.id);
+      console.warn('[IZVPRO] Korisnik nije pronađen za user:', user.id);
       // Kritičan fallback: umesto signOut, kreiraj privremeni profil
       _currentProfile = {
         id: user.id,
@@ -137,8 +137,16 @@ async function loadCurrentProfile() {
       return _currentProfile;
     }
 
-    _currentProfile = data;
-    console.log('[IZVPRO] Profil učitan:', data.email, '/', data.role);
+    // Mapiranje baza → frontend shape
+    _currentProfile = {
+      id: data.id,
+      tenant_id: data.office_id,
+      full_name: data.ime_prezime,
+      email: data.email,
+      role: data.role,
+      is_active: data.aktivan
+    };
+    console.log('[IZVPRO] Korisnik učitan:', data.email, '/', data.role);
     return _currentProfile;
   } catch (err) {
     logError('LOAD_PROFILE', err);
