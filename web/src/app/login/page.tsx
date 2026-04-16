@@ -1,12 +1,72 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { loginAction } from './actions';
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
+  return (
+    <form
+      action={loginAction}
+      className="rounded-2xl p-6 border"
+      style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+    >
+      {error === 'invalid_credentials' && (
+        <div
+          className="mb-4 px-4 py-3 rounded-lg text-sm"
+          style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
+        >
+          Pogrešan email ili lozinka.
+        </div>
+      )}
+
+      <div className="mb-4">
+        <label htmlFor="email" className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
+          Email adresa
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="username"
+          placeholder="ime@kancelarija.rs"
+          className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
+          style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+        />
+      </div>
+
+      <div className="mb-6">
+        <label htmlFor="password" className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
+          Lozinka
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          autoComplete="current-password"
+          placeholder="••••••••"
+          className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
+          style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
+        style={{ background: 'var(--color-primary)', cursor: 'pointer' }}
+      >
+        Prijavi se
+      </button>
+    </form>
+  );
+}
+
+export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
       <div className="w-full max-w-sm">
@@ -25,60 +85,14 @@ export default function LoginPage() {
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Prijavite se na vaš nalog</p>
         </div>
 
-        <form
-          action={loginAction}
-          className="rounded-2xl p-6 border"
-          style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
-        >
-          {error === 'invalid_credentials' && (
-            <div
-              className="mb-4 px-4 py-3 rounded-lg text-sm"
-              style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
-            >
-              Pogrešan email ili lozinka.
-            </div>
-          )}
-
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
-              Email adresa
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="username"
-              placeholder="ime@kancelarija.rs"
-              className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
-              style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
-              Lozinka
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-lg border text-sm outline-none"
-              style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
-            style={{ background: 'var(--color-primary)', cursor: 'pointer' }}
-          >
-            Prijavi se
-          </button>
-        </form>
+        <Suspense fallback={
+          <div
+            className="rounded-2xl p-6 border"
+            style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', minHeight: '280px' }}
+          />
+        }>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
