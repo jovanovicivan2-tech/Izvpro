@@ -25,6 +25,7 @@ export async function loginAction(formData: FormData) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
+        // --- getAll/setAll (koristi middleware i server components) ---
         getAll() {
           return cookieStore.getAll();
         },
@@ -34,11 +35,32 @@ export async function loginAction(formData: FormData) {
           cookiesToSet.forEach(({ name, value, options }) => {
             try {
               cookieStore.set(name, value, options);
-              console.log('[AUTH-DIAG][loginAction] cookie SET OK:', name);
+              console.log('[AUTH-DIAG][loginAction] setAll SET OK:', name);
             } catch (e) {
-              console.error('[AUTH-DIAG][loginAction] cookie SET FAILED:', name, String(e));
+              console.error('[AUTH-DIAG][loginAction] setAll SET FAILED:', name, String(e));
             }
           });
+        },
+        // --- get/set/remove (@supabase/ssr@0.3.0 storage.setItem koristi ovaj interfejs) ---
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookiesWritten.push(name);
+          console.log('[AUTH-DIAG][loginAction] set() called for:', name);
+          try {
+            cookieStore.set(name, value, options);
+            console.log('[AUTH-DIAG][loginAction] set() SET OK:', name);
+          } catch (e) {
+            console.error('[AUTH-DIAG][loginAction] set() SET FAILED:', name, String(e));
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set(name, '', { ...options, maxAge: 0 });
+          } catch (e) {
+            console.error('[AUTH-DIAG][loginAction] remove() FAILED:', name, String(e));
+          }
         },
       },
     }
