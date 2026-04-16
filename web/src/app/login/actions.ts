@@ -23,13 +23,11 @@ export async function loginAction(formData: FormData) {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // U Server Component kontekstu set() baca — middleware ce osveziti sesiju
-          }
+          // Server Action kontekst — set() SME da se pozove i ne sme biti tiho ugušen.
+          // Ako upis cookie-ja pukne, greška mora biti vidljiva.
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
         },
       },
     }
