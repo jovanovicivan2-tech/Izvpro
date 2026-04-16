@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-// IZVPRO app.js — v1.3 (auth fix)
+// IZVPRO app.js — v1.4 (instrumentation)
 // ═══════════════════════════════════════════════════
 
 const SUPABASE_URL = (window.__env && window.__env.SUPABASE_URL) || '';
@@ -39,6 +39,20 @@ let _initDone = false;
 // ─── LOGGING ──────────────────────────────────────────────────────────────────
 function logError(context, err) {
   console.error(`[IZVPRO][${context}]`, err);
+}
+
+// ─── INSTRUMENTATION ─────────────────────────────────────────────────────────
+// Minimalni dijagnostički wrapper — ne menja logiku, samo beleži runtime tok.
+// Ukloniti nakon potvrde logova. Svaki log počinje sa [DIAG] radi lakog filtera.
+function diagLog(step, data) {
+  console.log(`[DIAG][${step}]`, data !== undefined ? data : '');
+}
+function diagError(step, label, err, uiContinued) {
+  console.error(
+    `[DIAG][${step}] QUERY FAILED: ${label}`,
+    '\nError object:', err,
+    '\nUI nastavlja:', uiContinued
+  );
 }
 
 // ─── FORMATTERI ───────────────────────────────────────────────────────────────
@@ -99,8 +113,10 @@ function closeModal() {
 
 // ─── PROFIL ───────────────────────────────────────────────────────────────────
 async function loadCurrentProfile() {
+  diagLog('LOAD_PROFILE', 'start');
   try {
     const { data: { user }, error: authError } = await db.auth.getUser();
+    diagLog('LOAD_PROFILE', { authError: authError || null, userId: user?.id || null });
     if (authError || !user) return null;
 
     const { data, error } = await db
@@ -110,8 +126,8 @@ async function loadCurrentProfile() {
       .maybeSingle();
 
     if (error) {
+      diagError('LOAD_PROFILE', 'korisnici SELECT by id', error, false);
       logError('LOAD_PROFILE', error);
-      // Fallback iz auth metadatama
       _currentProfile = {
         id: user.id,
         tenant_id: user.user_metadata?.tenant_id || null,
@@ -120,12 +136,13 @@ async function loadCurrentProfile() {
         full_name: user.user_metadata?.full_name || user.email,
         is_active: true
       };
+      diagLog('LOAD_PROFILE', { fallback: 'metadata', tenant_id: _currentProfile.tenant_id });
       return _currentProfile;
     }
 
     if (!data) {
+      diagLog('LOAD_PROFILE', { result: 'NO ROW in korisnici for user ' + user.id });
       console.warn('[IZVPRO] Korisnik nije pronađen za user:', user.id);
-      // Kritičan fallback: umesto signOut, kreiraj privremeni profil
       _currentProfile = {
         id: user.id,
         tenant_id: null,
@@ -134,10 +151,10 @@ async function loadCurrentProfile() {
         full_name: user.email,
         is_active: true
       };
+      diagLog('LOAD_PROFILE', { fallback: 'no-row', tenant_id: null });
       return _currentProfile;
     }
 
-    // Mapiranje baza → frontend shape
     _currentProfile = {
       id: data.id,
       tenant_id: data.office_id,
@@ -146,9 +163,17 @@ async function loadCurrentProfile() {
       role: data.role,
       is_active: data.aktivan
     };
+    diagLog('LOAD_PROFILE', {
+      success: true,
+      email: data.email,
+      role: data.role,
+      tenant_id: data.office_id,
+      aktivan: data.aktivan
+    });
     console.log('[IZVPRO] Korisnik učitan:', data.email, '/', data.role);
     return _currentProfile;
   } catch (err) {
+    diagError('LOAD_PROFILE', 'unexpected exception', err, false);
     logError('LOAD_PROFILE', err);
     return null;
   }
@@ -163,6 +188,7 @@ function showLogin() {
 }
 
 function showApp(profile) {
+  diagLog('SHOW_APP', { profile_id: profile?.id, tenant_id: profile?.tenant_id, role: profile?.role });
   document.getElementById('login-screen')?.classList.add('hidden');
   document.getElementById('app-shell')?.classList.add('visible');
   const nameEl = document.getElementById('sidebar-user-name');
@@ -187,14 +213,22 @@ function wireLoginForm() {
       return;
     }
 
+    diagLog('WIRE_LOGIN_FORM', { step: 'submit', email });
     if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Prijavljivanje...'; }
     if (errorEl) errorEl.style.display = 'none';
 
     try {
-      const { error } = await db.auth.signInWithPassword({ email, password });
+      const { data: signInData, error } = await db.auth.signInWithPassword({ email, password });
+      diagLog('WIRE_LOGIN_FORM', {
+        step: 'signInResult',
+        error: error || null,
+        sessionExists: !!signInData?.session,
+        userId: signInData?.user?.id || null
+      });
       if (error) throw error;
       // onAuthStateChange preuzima
     } catch (err) {
+      diagError('WIRE_LOGIN_FORM', 'signInWithPassword', err, false);
       console.error('[IZVPRO] Login error:', err);
       if (errorEl) {
         errorEl.textContent = getErrorMessage(err);
@@ -209,6 +243,7 @@ function wireLogout() {
   const btn = document.getElementById('btn-logout');
   if (!btn) return;
   btn.addEventListener('click', async () => {
+    diagLog('LOGOUT', 'signOut called');
     await db.auth.signOut();
   });
 }
@@ -224,6 +259,7 @@ function wireSidebarNavigation() {
       links.forEach(a => a.classList.remove('active'));
       link.classList.add('active');
       const viewId = link.getAttribute('data-view');
+      diagLog('NAVIGATE', { viewId });
       views.forEach(v => v.classList.remove('active'));
       document.getElementById(`view-${viewId}`)?.classList.add('active');
       if (viewId === 'dashboard') await loadDashboard();
@@ -300,6 +336,7 @@ function showToast(msg, duration = 2800) {
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 async function loadDashboard() {
+  diagLog('DASHBOARD', 'start — querying 4 views');
   try {
     const [kpiRes, casesRes, deadlinesRes, docsRes] = await Promise.all([
       db.from('v_dashboard_kpis').select('*').limit(1).maybeSingle(),
@@ -307,6 +344,19 @@ async function loadDashboard() {
       db.from('v_deadlines_dashboard').select('*').order('due_date', { ascending: true }).range(0, 4),
       db.from('v_documents_overview').select('*', { count: 'exact', head: true })
     ]);
+
+    // ── dijagnostika svakog query-ja ──
+    if (kpiRes.error)       diagError('DASHBOARD', 'v_dashboard_kpis',     kpiRes.error,     true);
+    else                    diagLog('DASHBOARD',   { query: 'v_dashboard_kpis',     rows: kpiRes.data ? 1 : 0 });
+
+    if (casesRes.error)     diagError('DASHBOARD', 'v_cases_dashboard',    casesRes.error,   true);
+    else                    diagLog('DASHBOARD',   { query: 'v_cases_dashboard',    rows: casesRes.data?.length ?? 0 });
+
+    if (deadlinesRes.error) diagError('DASHBOARD', 'v_deadlines_dashboard', deadlinesRes.error, true);
+    else                    diagLog('DASHBOARD',   { query: 'v_deadlines_dashboard', rows: deadlinesRes.data?.length ?? 0 });
+
+    if (docsRes.error)      diagError('DASHBOARD', 'v_documents_overview',  docsRes.error,    true);
+    else                    diagLog('DASHBOARD',   { query: 'v_documents_overview',  count: docsRes.count ?? 0 });
 
     const kpis = kpiRes.data || {};
     const cases = casesRes.data || [];
@@ -368,7 +418,10 @@ async function loadDashboard() {
 
     const updated = document.getElementById('activity-updated');
     if (updated) updated.textContent = `Ažurirano: ${new Date().toLocaleTimeString('sr-RS')}`;
+
+    diagLog('DASHBOARD', 'render complete');
   } catch (err) {
+    diagError('DASHBOARD', 'Promise.all ili render', err, false);
     logError('DASHBOARD', err);
   }
 }
@@ -473,13 +526,20 @@ function wireCasesToolbar() {
 }
 
 async function loadCasesWorkspace() {
+  diagLog('CASES_WORKSPACE', 'start — querying v_cases_dashboard');
   try {
     const { data, error } = await db
       .from('v_cases_dashboard')
       .select('*')
       .order('created_at', { ascending: false })
       .range(0, 99);
-    if (error) throw error;
+
+    if (error) {
+      diagError('CASES_WORKSPACE', 'v_cases_dashboard SELECT', error, false);
+      throw error;
+    }
+
+    diagLog('CASES_WORKSPACE', { query: 'v_cases_dashboard', rows: data?.length ?? 0 });
     currentCases = data || [];
     renderCasesList(getFilteredCases());
     wireCasesToolbar();
@@ -489,7 +549,9 @@ async function loadCasesWorkspace() {
       renderCasesList(getFilteredCases());
       await loadSelectedCaseDetail(firstId);
     }
+    diagLog('CASES_WORKSPACE', 'render complete');
   } catch (err) {
+    diagError('CASES_WORKSPACE', 'fatal', err, false);
     logError('CASES_WORKSPACE', err);
   }
 }
@@ -571,6 +633,11 @@ function wireNewCaseButton() {
 }
 
 function openNewCaseModal() {
+  diagLog('OPEN_NEW_CASE_MODAL', {
+    tenant_id: _currentProfile?.tenant_id,
+    profile_id: _currentProfile?.id,
+    blocked: !_currentProfile?.tenant_id
+  });
   if (!_currentProfile?.tenant_id) {
     alert('Profil korisnika nema tenant_id. Osveži stranicu.');
     return;
@@ -671,10 +738,15 @@ async function handleNewCaseSubmit(e) {
     notes: form.notes.value.trim() || null
   };
   Object.keys(payload).forEach(k => { if (payload[k] === null) delete payload[k]; });
+  diagLog('NEW_CASE_SUBMIT', { payload_keys: Object.keys(payload), tenant_id: tenantId });
   try {
     saveBtn.disabled = true; saveBtn.textContent = 'Kreiranje...';
     const { data, error } = await db.from('cases').insert([payload]).select('id, case_number').single();
-    if (error) throw error;
+    if (error) {
+      diagError('NEW_CASE_SUBMIT', 'cases INSERT', error, false);
+      throw error;
+    }
+    diagLog('NEW_CASE_SUBMIT', { success: true, case_id: data.id, case_number: data.case_number });
     showNotice(notice, 'success', `Predmet ${data.case_number} je uspešno kreiran.`);
     showToast(`✅ Predmet ${data.case_number} kreiran`);
     currentSelectedCaseId = String(data.id);
@@ -844,27 +916,43 @@ async function loadDocumentsView() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 async function init() {
+  diagLog('INIT', 'start');
   injectEnhancements();
   wireLoginForm();
   wireLogout();
 
-  // Proveri da li već postoji aktivna sesija pri učitavanju
-  const { data: { session } } = await db.auth.getSession();
+  diagLog('INIT', 'calling getSession()');
+  const { data: { session }, error: sessionError } = await db.auth.getSession();
+  diagLog('INIT', {
+    step: 'getSession result',
+    sessionError: sessionError || null,
+    sessionExists: !!session,
+    userId: session?.user?.id || null
+  });
+
   if (session) {
+    diagLog('INIT', 'existing session found — loading profile');
     const profile = await loadCurrentProfile();
+    diagLog('INIT', { step: 'after loadCurrentProfile', profile_ok: !!profile, tenant_id: profile?.tenant_id });
     if (profile) {
       showApp(profile);
       wireSidebarNavigation();
       wireNewCaseButton();
+      diagLog('INIT', 'calling loadDashboard()');
       await loadDashboard();
       _initDone = true;
+      diagLog('INIT', '_initDone = true (existing session path)');
     }
+  } else {
+    diagLog('INIT', 'no session — showing login');
   }
 
   db.auth.onAuthStateChange(async (event, session) => {
+    diagLog('AUTH_STATE_CHANGE', { event, sessionExists: !!session, _initDone });
     console.log('[IZVPRO] Auth event:', event);
 
     if (event === 'SIGNED_OUT' || !session) {
+      diagLog('AUTH_STATE_CHANGE', 'SIGNED_OUT — resetting state');
       _currentProfile = null;
       _initDone = false;
       showLogin();
@@ -872,26 +960,40 @@ async function init() {
     }
 
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !_initDone) {
+      diagLog('AUTH_STATE_CHANGE', `${event} — _initDone false, loading profile`);
       const profile = await loadCurrentProfile();
+      diagLog('AUTH_STATE_CHANGE', {
+        step: 'after loadCurrentProfile',
+        profile_ok: !!profile,
+        is_active: profile?.is_active,
+        tenant_id: profile?.tenant_id
+      });
       if (!profile) {
+        diagLog('AUTH_STATE_CHANGE', 'NO PROFILE — signing out');
         const errorEl = document.getElementById('login-error');
         if (errorEl) { errorEl.textContent = 'Profil nije pronađen. Kontaktiraj administratora.'; errorEl.style.display = 'block'; }
         await db.auth.signOut();
         return;
       }
       if (profile.is_active === false) {
+        diagLog('AUTH_STATE_CHANGE', 'PROFILE INACTIVE — signing out');
         const errorEl = document.getElementById('login-error');
         if (errorEl) { errorEl.textContent = 'Vaš nalog je deaktiviran.'; errorEl.style.display = 'block'; }
         await db.auth.signOut();
         return;
       }
       _initDone = true;
+      diagLog('AUTH_STATE_CHANGE', '_initDone = true — calling showApp + loadDashboard');
       showApp(profile);
       wireSidebarNavigation();
       wireNewCaseButton();
       await loadDashboard();
+    } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && _initDone) {
+      diagLog('AUTH_STATE_CHANGE', `${event} — _initDone already true, skipping re-init`);
     }
   });
+
+  diagLog('INIT', 'complete');
 }
 
 document.addEventListener('DOMContentLoaded', init);
