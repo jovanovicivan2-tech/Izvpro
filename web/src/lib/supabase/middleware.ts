@@ -22,6 +22,8 @@ export async function updateSession(request: NextRequest, reqId?: string) {
     pathname.startsWith('/auth') ||
     pathname.startsWith('/demo') ||
     pathname.startsWith('/register') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password') ||
     pathname === '/';
 
   if (!hasCookie && !isPublicPath) {

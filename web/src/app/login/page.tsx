@@ -133,6 +133,15 @@ function LoginForm() {
       >
         Prijavi se
       </button>
+
+      <div style={{ textAlign: 'right', marginTop: '0.75rem' }}>
+        <a
+          href="/forgot-password"
+          style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}
+        >
+          Zaboravili ste lozinku?
+        </a>
+      </div>
     </form>
   );
 }
