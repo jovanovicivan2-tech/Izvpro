@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
 export async function updateSession(request: NextRequest, reqId?: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,36 +19,22 @@ export async function updateSession(request: NextRequest, reqId?: string) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet: { name: string; value: string; options: Partial<ResponseCookie> }[]) {
+      setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options)
         );
       },
-      get(name: string) {
-        return request.cookies.get(name)?.value;
-      },
-      set(name: string, value: string, options: Partial<ResponseCookie>) {
-        request.cookies.set(name, value);
-        supabaseResponse = NextResponse.next({ request });
-        supabaseResponse.cookies.set(name, value, options);
-      },
-      remove(name: string, options: Partial<ResponseCookie>) {
-        request.cookies.set(name, '');
-        supabaseResponse = NextResponse.next({ request });
-        supabaseResponse.cookies.set(name, '', { ...options, maxAge: 0 });
-      },
     },
   });
 
-  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+  // getSession() čita JWT lokalno iz cookie-ja — bez remote poziva.
+  // Dovoljno za routing odluku. Brže i pouzdanije u edge runtimeu.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
-  if (getUserError) {
-    console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} getUser=error msg="${getUserError.message}"`);
-  } else {
-    console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} getUser=ok userId=${user?.id ?? 'null'}`);
-  }
+  console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} session=${!!session} userId=${user?.id ?? 'null'}`);
 
   const isPublicPath =
     pathname.startsWith('/login') ||
