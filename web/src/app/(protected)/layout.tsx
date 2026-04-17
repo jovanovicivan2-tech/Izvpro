@@ -6,10 +6,19 @@ export default function ProtectedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen" style={{ background: 'var(--color-bg)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Sidebar />
-      <main className="flex-1 min-w-0 p-6">
-        {children}
+      <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: '1.75rem 2rem',
+          maxWidth: '100%',
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          {children}
+        </div>
       </main>
     </div>
   );

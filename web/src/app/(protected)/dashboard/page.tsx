@@ -60,10 +60,43 @@ export default async function DashboardPage() {
   ]);
 
   const kpiData = [
-    { label: 'Ukupno predmeta',  value: ukupno ?? 0,       icon: '📁', danger: false, warn: false },
-    { label: 'Aktivni predmeti', value: aktivni ?? 0,      icon: '⚡', danger: false, warn: false },
-    { label: 'Rokovi danas',     value: rokoviDanas ?? 0,  icon: '🔴', danger: (rokoviDanas ?? 0) > 0, warn: false },
-    { label: 'Rokovi (7 dana)',  value: rokoviNedelja ?? 0,icon: '📅', danger: false, warn: (rokoviNedelja ?? 0) > 0 },
+    {
+      label: 'Ukupno predmeta', value: ukupno ?? 0, danger: false, warn: false,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Aktivni predmeti', value: aktivni ?? 0, danger: false, warn: false,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Rokovi danas', value: rokoviDanas ?? 0, danger: (rokoviDanas ?? 0) > 0, warn: false,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Rokovi (7 dana)', value: rokoviNedelja ?? 0, danger: false, warn: (rokoviNedelja ?? 0) > 0,
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -95,29 +128,59 @@ export default async function DashboardPage() {
 
       {/* KPI kartice */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {kpiData.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-xl p-5 border flex items-center gap-4"
-            style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
-          >
-            <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{kpi.icon}</span>
-            <div>
-              <p
-                className="text-2xl font-bold"
+        {kpiData.map((kpi) => {
+          const accentColor = kpi.danger ? 'var(--color-error)' : kpi.warn ? 'var(--color-warning)' : 'var(--color-primary)';
+          const accentBg = kpi.danger ? 'var(--color-error-highlight)' : kpi.warn ? 'var(--color-warning-highlight)' : 'var(--color-primary-subtle)';
+          return (
+            <div
+              key={kpi.label}
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1rem 1.1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.875rem',
+                borderLeft: `3px solid ${accentColor}`,
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <div
                 style={{
-                  color: kpi.danger ? 'var(--color-error)' : kpi.warn ? 'var(--color-warning)' : 'var(--color-primary)',
-                  fontVariantNumeric: 'tabular-nums',
+                  width: 36,
+                  height: 36,
+                  borderRadius: 'var(--radius-md)',
+                  background: accentBg,
+                  color: accentColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
-                {kpi.value}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {kpi.label}
-              </p>
+                {kpi.icon}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p
+                  style={{
+                    fontSize: '1.55rem',
+                    fontWeight: 700,
+                    lineHeight: 1.1,
+                    color: accentColor,
+                    fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {kpi.value}
+                </p>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem', fontWeight: 500 }}>
+                  {kpi.label}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Grid: tabela + rokovi */}
