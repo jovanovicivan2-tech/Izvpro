@@ -2,10 +2,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-// U produkciji ova stranica nije dostupna
-if (process.env.NODE_ENV === 'production') {
-  redirect('/login');
-}
+export const dynamic = 'force-dynamic';
 
 const STATUS_LABELS: Record<string, string> = {
   aktivan: 'Aktivan',
@@ -169,6 +166,9 @@ const navItems = [
 ];
 
 export default function DemoPredmetiPage() {
+  if (process.env.NODE_ENV === 'production') {
+    redirect('/login');
+  }
   const predmeti = MOCK_PREDMETI;
   const ukupnoAktivnih = predmeti.filter((p) => p.status === 'aktivan').length;
   const ukupnoRokovaUskoro = predmeti.filter((p) => isRokUskoro(p.rok_sledece_radnje)).length;
