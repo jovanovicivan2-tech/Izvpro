@@ -11,17 +11,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
     }
 
-    // Privremeno čuvamo cookies koje Supabase želi da upiše
-    const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = [];
+    // Response se kreira unapred da bi cookies.set() mogao da upisuje direktno u njega
+    const response = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll: () => request.cookies.getAll(),
-          setAll: (cookies: { name: string; value: string; options: CookieOptions }[]) => {
-            cookies.forEach((c) => pendingCookies.push({ name: c.name, value: c.value, options: (c.options ?? {}) as Record<string, unknown> }));
+          // @supabase/ssr 0.3.0 poziva get/set/remove — ne getAll/setAll
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            console.log(`[TRACE][login] cookie.set name=${name}`);
+            response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2]);
+          },
+          remove(name: string, options: CookieOptions) {
+            response.cookies.set(name, '', { ...options as object, maxAge: 0 } as Parameters<typeof response.cookies.set>[2]);
           },
         },
       }
@@ -29,30 +36,16 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    console.log(`[TRACE][login] ok=${!!data?.session} cookies=${pendingCookies.map(c => c.name).join(',')} error=${error?.message ?? 'none'}`);
+    console.log(`[TRACE][login] ok=${!!data?.session} error=${error?.message ?? 'none'}`);
+    console.log(`[TRACE][login] cookies_in_response=[${response.cookies.getAll().map(c => c.name).join(',')}]`);
 
     if (error || !data?.session) {
       return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
     }
 
-    // Login uspeo — pravimo redirect response i upisujemo cookies
-    const response = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
-
-    pendingCookies.forEach(({ name, value, options }) => {
-      response.cookies.set({
-        name,
-        value,
-        path: '/',
-        sameSite: 'lax',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        ...(options as object),
-      });
-    });
-
     return response;
   } catch (err) {
-    console.error('[TRACE][login] UNHANDLED ERROR:', err);
+    console.error('[TRACE][login] ERROR:', err);
     return NextResponse.redirect(new URL('/login?error=server_error', request.url), { status: 303 });
   }
 }
