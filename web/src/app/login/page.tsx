@@ -1,12 +1,11 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     searchParams.get('error') === 'invalid_credentials'
@@ -30,19 +29,16 @@ function LoginForm() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    console.log('[TRACE][login] client signIn start email=' + email);
-
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
-      console.log('[TRACE][login] client signIn error=' + signInError.message);
       setError('Pogrešan email ili lozinka.');
       setLoading(false);
       return;
     }
 
-    console.log('[TRACE][login] client signIn ok — navigating to /dashboard');
-    router.push('/dashboard');
+    // Hard navigation — garantuje da middleware čita svež session cookie
+    window.location.href = '/dashboard';
   }
 
   return (
@@ -96,7 +92,11 @@ function LoginForm() {
         type="submit"
         disabled={loading}
         className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
-        style={{ background: 'var(--color-primary)', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        style={{
+          background: 'var(--color-primary)',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.7 : 1,
+        }}
       >
         {loading ? 'Prijava...' : 'Prijavi se'}
       </button>
