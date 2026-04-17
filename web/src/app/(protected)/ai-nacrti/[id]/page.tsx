@@ -159,6 +159,15 @@ export default async function NacrtDetailPage({ params, searchParams }: PageProp
           <div className="rounded-xl border p-4" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
             <p className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Akcije</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {/* PDF export — otvara print stranicu u novoj kartici */}
+              <a
+                href={`/api/nacrti/${id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', textAlign: 'center' as const, display: 'block' }}
+              >
+                Štampaj / Export PDF
+              </a>
               <Link
                 href={`/ai-nacrti?tab=novi&predmet_id=${predmet?.id ?? ''}`}
                 style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, border: '1px solid var(--color-border)', color: 'var(--color-text)', background: 'transparent', textDecoration: 'none', textAlign: 'center' as const }}

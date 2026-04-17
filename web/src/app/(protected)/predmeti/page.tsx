@@ -13,6 +13,8 @@ const STATUS_COLORS: Record<string, { background: string; color: string }> = {
   arhiviran:   { background: 'var(--color-surface-offset)',    color: 'var(--color-text-muted)' },
 };
 
+const PAGE_SIZE = 20;
+
 function formatIznos(iznos: number | null) {
   if (iznos === null || iznos === undefined) return '—';
   return new Intl.NumberFormat('sr-RS', { style: 'currency', currency: 'RSD', maximumFractionDigits: 0 }).format(iznos);
@@ -28,42 +30,55 @@ function isRokUskoro(rok: string | null): boolean {
 }
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; status?: string; }>;
+  searchParams: Promise<{ q?: string; status?: string; page?: string; }>;
 }
 
 export default async function PredmetiPage({ searchParams }: PageProps) {
   console.log('[TRACE][page] render path=/predmeti');
 
-  const { q, status } = await searchParams;
+  const { q, status, page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10));
+  const offset = (page - 1) * PAGE_SIZE;
+
   const { officeId } = await requireTenantContext();
   const supabase = await createClient();
 
-  // Query sa filterima
-  let query = supabase
+  // Count upit (za paginaciju) — bez .range()
+  let countQuery = supabase
+    .from('predmeti')
+    .select('id', { count: 'exact', head: true })
+    .eq('office_id', officeId);
+
+  if (status && status !== 'svi') countQuery = countQuery.eq('status', status);
+  if (q && q.trim()) {
+    const term = q.trim();
+    countQuery = countQuery.or(`duznik.ilike.%${term}%,broj_predmeta.ilike.%${term}%,poverilac.ilike.%${term}%`);
+  }
+
+  // Data upit sa paginacijom
+  let dataQuery = supabase
     .from('predmeti')
     .select('*')
     .eq('office_id', officeId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
 
-  // Filter po statusu
-  if (status && status !== 'svi') {
-    query = query.eq('status', status);
-  }
-
-  // Pretraga po dužniku ili broju predmeta (ilike = case-insensitive)
+  if (status && status !== 'svi') dataQuery = dataQuery.eq('status', status);
   if (q && q.trim()) {
     const term = q.trim();
-    query = query.or(`duznik.ilike.%${term}%,broj_predmeta.ilike.%${term}%,poverilac.ilike.%${term}%`);
+    dataQuery = dataQuery.or(`duznik.ilike.%${term}%,broj_predmeta.ilike.%${term}%,poverilac.ilike.%${term}%`);
   }
 
-  const { data: predmeti, error } = await query;
+  const [{ count: totalCount }, { data: predmeti, error }, { data: svi }] = await Promise.all([
+    countQuery,
+    dataQuery,
+    supabase.from('predmeti').select('status').eq('office_id', officeId),
+  ]);
 
-  // Ukupni broj po statusu za badges (uvek bez pretrage)
-  const { data: svi } = await supabase
-    .from('predmeti')
-    .select('status')
-    .eq('office_id', officeId);
+  const total = totalCount ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  // Ukupni broj po statusu za badges (uvek bez pretrage i paginacije)
   const counts = (svi ?? []).reduce((acc: Record<string, number>, p) => {
     acc[p.status] = (acc[p.status] ?? 0) + 1;
     acc['svi'] = (acc['svi'] ?? 0) + 1;
@@ -96,11 +111,12 @@ export default async function PredmetiPage({ searchParams }: PageProps) {
     color: activeStatus === s ? '#fff' : 'var(--color-text-muted)',
   });
 
-  // Gradi search URL sa sačuvanim filterima
+  // Gradi URL sa sačuvanim filterima i page parametrom
   function buildUrl(params: Record<string, string | undefined>) {
     const p = new URLSearchParams();
     if (params.q) p.set('q', params.q);
     if (params.status && params.status !== 'svi') p.set('status', params.status);
+    if (params.page && params.page !== '1') p.set('page', params.page);
     const s = p.toString();
     return `/predmeti${s ? `?${s}` : ''}`;
   }
@@ -112,8 +128,9 @@ export default async function PredmetiPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Predmeti</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            {predmeti?.length ?? 0} {q ? 'rezultata pretrage' : 'predmeta'}
+            {total} {q ? 'rezultata pretrage' : 'predmeta'}
             {q && <span> za „<strong>{q}</strong>"</span>}
+            {totalPages > 1 && <span> · stranica {page}/{totalPages}</span>}
           </p>
         </div>
         <Link
@@ -126,7 +143,6 @@ export default async function PredmetiPage({ searchParams }: PageProps) {
 
       {/* Pretraga + Filteri */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        {/* Search box */}
         <form method="GET" action="/predmeti" style={{ display: 'flex', gap: '0.5rem', flex: '1', minWidth: 220 }}>
           {status && status !== 'svi' && <input type="hidden" name="status" value={status} />}
           <input
@@ -243,8 +259,70 @@ export default async function PredmetiPage({ searchParams }: PageProps) {
               </tbody>
             </table>
           </div>
+
+          {/* Paginacija */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderTop: '1px solid var(--color-border)', background: 'var(--color-surface-offset)' }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} od {total}
+              </span>
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                {page > 1 && (
+                  <Link
+                    href={buildUrl({ q, status, page: String(page - 1) })}
+                    style={{ padding: '0.3rem 0.7rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)', fontWeight: 600, border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface)', textDecoration: 'none' }}
+                  >
+                    ← Prethodna
+                  </Link>
+                )}
+                {/* Stranice */}
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let p: number;
+                  if (totalPages <= 7) {
+                    p = i + 1;
+                  } else if (page <= 4) {
+                    p = i + 1;
+                  } else if (page >= totalPages - 3) {
+                    p = totalPages - 6 + i;
+                  } else {
+                    p = page - 3 + i;
+                  }
+                  return (
+                    <Link
+                      key={p}
+                      href={buildUrl({ q, status, page: String(p) })}
+                      style={{
+                        padding: '0.3rem 0.6rem',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: 'var(--text-xs)',
+                        fontWeight: p === page ? 700 : 400,
+                        border: `1px solid ${p === page ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                        color: p === page ? '#fff' : 'var(--color-text-muted)',
+                        background: p === page ? 'var(--color-primary)' : 'var(--color-surface)',
+                        textDecoration: 'none',
+                        minWidth: '2rem',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {p}
+                    </Link>
+                  );
+                })}
+                {page < totalPages && (
+                  <Link
+                    href={buildUrl({ q, status, page: String(page + 1) })}
+                    style={{ padding: '0.3rem 0.7rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)', fontWeight: 600, border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface)', textDecoration: 'none' }}
+                  >
+                    Sledeća →
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
+import React from 'react';
