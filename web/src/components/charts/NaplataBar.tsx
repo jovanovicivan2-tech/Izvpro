@@ -43,8 +43,8 @@ export default function NaplataBar({ data }: Props) {
           width={44}
         />
         <Tooltip
-          formatter={(value: number) => [
-            new Intl.NumberFormat('sr-RS', { style: 'currency', currency: 'RSD', maximumFractionDigits: 0 }).format(value),
+          formatter={(value) => [
+            new Intl.NumberFormat('sr-RS', { style: 'currency', currency: 'RSD', maximumFractionDigits: 0 }).format(Number(value)),
             'Glavnica',
           ]}
           contentStyle={{
