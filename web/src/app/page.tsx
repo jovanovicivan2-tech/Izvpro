@@ -1,11 +1,14 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const SESSION_COOKIE = 'sb-bwpyivqdinemhfrrjdhu-auth-token';
+  const hasCookie =
+    !!cookieStore.get(SESSION_COOKIE)?.value ||
+    !!cookieStore.get(`${SESSION_COOKIE}.0`)?.value;
 
-  if (user) {
+  if (hasCookie) {
     redirect('/dashboard');
   } else {
     redirect('/login');
