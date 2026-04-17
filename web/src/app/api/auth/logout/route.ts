@@ -1,31 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+
+const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
+const SESSION_COOKIE = `sb-${PROJECT_REF}-auth-token`;
 
 export async function POST(request: NextRequest) {
   console.log('[TRACE][logout] POST');
 
   const response = NextResponse.redirect(new URL('/login', request.url), { status: 303 });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2]);
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set(name, '', { ...options as object, maxAge: 0 } as Parameters<typeof response.cookies.set>[2]);
-        },
-      },
-    }
-  );
+  // Brišemo session cookie i sve moguće chunk varijante
+  const cookieOptions = { path: '/', maxAge: 0, httpOnly: true, sameSite: 'lax' as const };
+  response.cookies.set(SESSION_COOKIE, '', cookieOptions);
+  for (let i = 0; i < 10; i++) {
+    response.cookies.set(`${SESSION_COOKIE}.${i}`, '', cookieOptions);
+  }
 
-  await supabase.auth.signOut();
-
-  console.log('[TRACE][logout] signOut OK → redirect /login');
+  console.log('[TRACE][logout] cookies cleared → redirect /login');
   return response;
 }

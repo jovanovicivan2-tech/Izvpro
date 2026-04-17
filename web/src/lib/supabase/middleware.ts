@@ -32,9 +32,12 @@ export async function updateSession(request: NextRequest, reqId?: string) {
     },
   });
 
-  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+  // getSession() čita token iz cookie-ja lokalno — bez API poziva i bez refresh-a
+  // Ovo sprečava "refresh_token_not_found" petlju
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
-  console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} userId=${user?.id ?? 'null'} error=${getUserError?.message ?? 'none'}`);
+  console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} userId=${user?.id ?? 'null'} error=${sessionError?.message ?? 'none'}`);
 
   const isPublicPath =
     pathname.startsWith('/login') ||
