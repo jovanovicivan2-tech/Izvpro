@@ -13,20 +13,25 @@ export interface TenantContext {
  * Koristi se na vrhu svakog server componenta i server actiona.
  * Vraća { userId, userEmail, officeId } ili redirectuje na /login.
  * Nikad ne vraća null — ako nema korisnika ili office_id, redirect.
+ *
+ * Koristi getSession() umesto getUser() da izbegne API poziv koji može
+ * failovati zbog refresh_token_not_found greške.
  */
 export async function requireTenantContext(): Promise<TenantContext> {
   const supabase = await createClient();
 
-  console.log('[TRACE][tenant] enter getUser');
+  console.log('[TRACE][tenant] enter getSession');
 
   const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
 
-  console.log('[TRACE][tenant] getUser userId=' + (user?.id ?? 'null') + ' error=' + (authError?.message ?? 'none'));
+  const user = session?.user ?? null;
 
-  if (authError || !user) {
+  console.log('[TRACE][tenant] getSession userId=' + (user?.id ?? 'null') + ' error=' + (sessionError?.message ?? 'none'));
+
+  if (sessionError || !user) {
     console.log('[TRACE][tenant] no_user redirect=/login');
     redirect('/login');
   }
