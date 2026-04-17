@@ -59,13 +59,15 @@ export async function POST(request: NextRequest) {
 
     const session = data.session;
 
-    // Proveriti da li je kancelarija aktivna
+       // Proveriti da li je kancelarija aktivna — koristimo service role da zaobiđemo RLS
+    // (anon key + novi token ne bi mogao da uradi join sa offices zbog RLS politike)
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const officeRes = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/korisnici?select=office_id,offices(status)&id=eq.${session.user.id}&limit=1`,
       {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${serviceKey}`,
+          'apikey': serviceKey,
           'Accept': 'application/json',
         },
       }

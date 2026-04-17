@@ -4,6 +4,8 @@ import AdminPanelClient from './AdminPanelClient';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Admin panel mora koristiti service role da vidi SVE kancelarije (RLS bi ograničio na jednu)
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ANON_KEY;
 
 export interface OfficeRow {
   id: string;
@@ -22,7 +24,7 @@ export interface OfficeRow {
 export default async function AdminPage() {
   const ctx = await requireTenantContext();
 
-  // Proveriti da li je super admin
+  // Proveriti da li je super admin (može koristiti accessToken — vidi sopstveni red)
   const checkRes = await fetch(
     `${SUPABASE_URL}/rest/v1/korisnici?select=is_super_admin&id=eq.${ctx.userId}&limit=1`,
     {
@@ -39,13 +41,13 @@ export default async function AdminPage() {
     redirect('/dashboard');
   }
 
-  // Dohvatiti sve kancelarije sa brojevima
+  // Dohvatiti sve kancelarije — koristimo service role da zaobiđemo RLS
   const officesRes = await fetch(
     `${SUPABASE_URL}/rest/v1/offices?select=id,naziv,email,telefon,adresa,pib,status,created_at&order=created_at.desc`,
     {
       headers: {
-        Authorization: `Bearer ${ctx.accessToken}`,
-        apikey: ANON_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        apikey: SERVICE_KEY,
         Accept: 'application/json',
       },
       cache: 'no-store',
@@ -58,15 +60,15 @@ export default async function AdminPage() {
     officesRaw.map(async (o: { id: string; naziv: string; email: string | null; telefon: string | null; adresa: string | null; pib: string | null; status: 'pending' | 'active' | 'suspended'; created_at: string }) => {
       const [kRes, pRes, adminRes] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/korisnici?select=id&office_id=eq.${o.id}`, {
-          headers: { Authorization: `Bearer ${ctx.accessToken}`, apikey: ANON_KEY, 'Prefer': 'count=exact', Accept: 'application/json' },
+          headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY, 'Prefer': 'count=exact', Accept: 'application/json' },
           cache: 'no-store',
         }),
         fetch(`${SUPABASE_URL}/rest/v1/predmeti?select=id&office_id=eq.${o.id}`, {
-          headers: { Authorization: `Bearer ${ctx.accessToken}`, apikey: ANON_KEY, 'Prefer': 'count=exact', Accept: 'application/json' },
+          headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY, 'Prefer': 'count=exact', Accept: 'application/json' },
           cache: 'no-store',
         }),
         fetch(`${SUPABASE_URL}/rest/v1/korisnici?select=email&office_id=eq.${o.id}&role=eq.admin&limit=1`, {
-          headers: { Authorization: `Bearer ${ctx.accessToken}`, apikey: ANON_KEY, Accept: 'application/json' },
+          headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY, Accept: 'application/json' },
           cache: 'no-store',
         }),
       ]);
