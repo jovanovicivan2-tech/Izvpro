@@ -3,6 +3,7 @@ import { requireTenantContext } from '@/lib/auth/require-tenant-context';
 import Link from 'next/link';
 import type { Korisnik, Office } from '@/types/database';
 import React from 'react';
+import { cookies } from 'next/headers';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -26,13 +27,16 @@ const ROLE_COLORS: Record<string, { background: string; color: string }> = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ tab?: string; error?: string; success?: string; email?: string; pwd?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string; success?: string; email?: string }>;
 }
 
 export default async function PodesavanjaPage({ searchParams }: PageProps) {
   console.log('[TRACE][page] render path=/podesavanja');
 
-  const { tab, error, success, email: invEmail, pwd: invPwd } = await searchParams;
+  const { tab, error, success, email: invEmail } = await searchParams;
+  // Lozinka dolazi iz jednokratnog httpOnly cookie-ja — nikad iz URL-a
+  const cookieStore = await cookies();
+  const invPwd = cookieStore.get('_invite_pwd')?.value ?? null;
   const activeTab = tab || 'kancelarija';
 
   const { officeId, userId } = await requireTenantContext();

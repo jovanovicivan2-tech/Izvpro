@@ -77,12 +77,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[TRACE][api/korisnici] korisnik kreiran email=${email} role=${role} tempPwd=${tempPassword}`);
-    // U produkciji ovde ide slanje emaila — za sada redirect sa tempPassword u URL za prikaz
-    return NextResponse.redirect(
-      new URL(`/podesavanja?success=korisnik&email=${encodeURIComponent(email)}&pwd=${encodeURIComponent(tempPassword)}`, request.url),
-      { status: 303 }
-    );
+    console.log(`[TRACE][api/korisnici] korisnik kreiran email=${email} role=${role}`);
+    // Privremena lozinka se čuva u jednokratnom httpOnly cookie-ju — ne ide u URL
+    const redirectUrl = new URL(`/podesavanja?success=korisnik&email=${encodeURIComponent(email)}`, request.url);
+    const res = NextResponse.redirect(redirectUrl, { status: 303 });
+    res.cookies.set('_invite_pwd', tempPassword, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/podesavanja',
+      maxAge: 60, // 60 sekundi — samo za prikaz, posle se briše
+    });
+    return res;
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Nepoznata greška';

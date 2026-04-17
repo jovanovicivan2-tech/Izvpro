@@ -1,7 +1,11 @@
-// DEMO STRANICA — javno dostupna, mock podaci, bez auth
-// Koristiti SAMO za pregled UI-a. Obrisati pre produkcije ili ostaviti za interno testiranje.
-
+// DEMO STRANICA — samo za lokalni razvoj
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
+
+// U produkciji ova stranica nije dostupna
+if (process.env.NODE_ENV === 'production') {
+  redirect('/login');
+}
 
 const STATUS_LABELS: Record<string, string> = {
   aktivan: 'Aktivan',

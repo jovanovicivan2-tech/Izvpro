@@ -11,8 +11,8 @@ export interface TenantContext {
 
 const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
 const SESSION_COOKIE = `sb-${PROJECT_REF}-auth-token`;
-const SUPABASE_URL = 'https://bwpyivqdinemhfrrjdhu.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 interface StoredSession {
   access_token: string;
