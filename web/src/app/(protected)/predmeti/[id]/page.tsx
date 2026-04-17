@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Predmet, Rok } from '@/types/database';
 import StrankeSection from '@/components/predmeti/StrankeSection';
+import FinansijeSection from '@/components/predmeti/FinansijeSection';
 
 function formatDatum(d: string | null) {
   if (!d) return '—';
@@ -298,6 +299,11 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
       {/* Stranke predmeta */}
       <div style={{ marginTop: '1.5rem' }}>
         <StrankeSection predmetId={id} />
+      </div>
+
+      {/* Finansije */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <FinansijeSection predmetId={id} iznosGlavnice={p.iznos_glavnice ?? null} />
       </div>
 
       {/* Istorija izmena — Audit Log */}

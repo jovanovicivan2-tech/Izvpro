@@ -40,6 +40,22 @@ export interface Korisnik {
 // Tabela: predmeti
 // Kolone uskladjene sa predmeti/page.tsx queryjima
 // -------------------------------------------------------
+// Tabela: payments (uplate po predmetu)
+// -------------------------------------------------------
+export type TipUplate = 'uplata' | 'povracaj' | 'troskovi' | 'kamata';
+
+export interface Payment {
+  id: string;
+  predmet_id: string;
+  office_id: string;
+  datum_uplate: string;
+  iznos: number;
+  tip_uplate: TipUplate;
+  opis: string | null;
+  created_at: string;
+}
+
+// -------------------------------------------------------
 // Tabela: case_parties (stranke predmeta)
 // -------------------------------------------------------
 export type TipStranke = 'duznik' | 'poverilac' | 'zastupnik_duznika' | 'zastupnik_pov' | 'trece_lice';
