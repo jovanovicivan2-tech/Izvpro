@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const password = formData.get('password') as string;
 
   if (!email || !password) {
-    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url));
+    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
   }
 
   const cookiesToWrite: { name: string; value: string; options: CookieOptions }[] = [];
@@ -33,10 +33,11 @@ export async function POST(request: NextRequest) {
   console.log(`[TRACE][login] cookiesToWrite=[${cookiesToWrite.map(c => c.name).join(',')}]`);
 
   if (error || !data.session) {
-    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url));
+    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
   }
 
-  const response = NextResponse.redirect(new URL('/dashboard', request.url));
+  // 303 See Other — forsira GET na sledećem requestu (ne čuva POST metodu kao 307)
+  const response = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
 
   // Eksplicitno upisujemo sve Supabase cookies u HTTP response
   // Ovo garantuje chunked server-side format koji middleware prepoznaje
