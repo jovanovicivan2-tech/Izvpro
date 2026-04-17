@@ -3,6 +3,7 @@ import { requireTenantContext } from '@/lib/auth/require-tenant-context';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Predmet, Rok } from '@/types/database';
+import StrankeSection from '@/components/predmeti/StrankeSection';
 
 function formatDatum(d: string | null) {
   if (!d) return '—';
@@ -292,6 +293,11 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
           </div>
 
         </div>
+      </div>
+
+      {/* Stranke predmeta */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <StrankeSection predmetId={id} />
       </div>
 
       {/* Istorija izmena — Audit Log */}

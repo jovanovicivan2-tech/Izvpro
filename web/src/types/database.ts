@@ -40,6 +40,25 @@ export interface Korisnik {
 // Tabela: predmeti
 // Kolone uskladjene sa predmeti/page.tsx queryjima
 // -------------------------------------------------------
+// Tabela: case_parties (stranke predmeta)
+// -------------------------------------------------------
+export type TipStranke = 'duznik' | 'poverilac' | 'zastupnik_duznika' | 'zastupnik_pov' | 'trece_lice';
+
+export interface CaseParty {
+  id: string;
+  predmet_id: string;
+  office_id: string;
+  tip_stranke: TipStranke;
+  ime_prezime: string;
+  jmbg_pib: string | null;
+  adresa: string | null;
+  telefon: string | null;
+  email: string | null;
+  napomena: string | null;
+  created_at: string;
+}
+
+// -------------------------------------------------------
 export interface Predmet {
   id: string;
   office_id: string;

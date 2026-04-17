@@ -7,6 +7,7 @@ export interface TenantContext {
   userId: string;
   userEmail: string;
   officeId: string;
+  accessToken: string;
 }
 
 const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
@@ -89,5 +90,5 @@ export async function requireTenantContext(): Promise<TenantContext> {
     redirect('/login');
   }
 
-  return { userId, userEmail, officeId };
+  return { userId, userEmail, officeId, accessToken };
 }
