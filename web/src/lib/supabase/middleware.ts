@@ -4,9 +4,20 @@ const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
 const SESSION_COOKIE = `sb-${PROJECT_REF}-auth-token`;
 
 /**
+ * Dekoduje base64url string — koristi atob() koji radi u Edge Runtime.
+ * Buffer.from() NIJE dostupan u Edge Runtime.
+ */
+function base64urlDecode(str: string): string {
+  // base64url → base64 (zameni - i _ sa + i /)
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  // Dodaj padding ako treba
+  const padded = b64 + '=='.slice(0, (4 - (b64.length % 4)) % 4);
+  return atob(padded);
+}
+
+/**
  * Čita session cookie i dekoduje JWT access token lokalno (bez API poziva).
- * Ovo sprečava "refresh_token_not_found" petlju koju pravi supabase.auth.getUser()
- * kad pokušava da refreshuje token na svakom requestu.
+ * Radi u Edge Runtime — koristi samo Web APIs (atob, JSON.parse).
  */
 function getSessionFromCookies(request: NextRequest): { userId: string } | null {
   try {
@@ -21,7 +32,7 @@ function getSessionFromCookies(request: NextRequest): { userId: string } | null 
         if (!chunk) break;
         combined += chunk;
       }
-      raw = combined || undefined;
+      if (combined) raw = combined;
     }
 
     if (!raw) return null;
@@ -29,11 +40,11 @@ function getSessionFromCookies(request: NextRequest): { userId: string } | null 
     const session = JSON.parse(raw);
     if (!session?.access_token) return null;
 
-    // Dekodujem JWT payload lokalno (bez verifikacije signature — samo za middleware routing)
-    const parts = session.access_token.split('.');
+    // Dekodujem JWT payload lokalno
+    const parts = (session.access_token as string).split('.');
     if (parts.length !== 3) return null;
 
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    const payload = JSON.parse(base64urlDecode(parts[1]));
 
     // Proveri expiry
     const now = Math.floor(Date.now() / 1000);
@@ -42,12 +53,12 @@ function getSessionFromCookies(request: NextRequest): { userId: string } | null 
       return null;
     }
 
-    const userId = payload.sub;
+    const userId = payload.sub as string | undefined;
     if (!userId) return null;
 
     return { userId };
   } catch (e) {
-    console.error('[TRACE][middleware] cookie parse error:', e);
+    console.error('[TRACE][middleware] session parse error:', e);
     return null;
   }
 }
