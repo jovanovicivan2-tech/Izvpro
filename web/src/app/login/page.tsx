@@ -8,18 +8,25 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
+  const errorMessage =
+    error === 'invalid_credentials'
+      ? 'Pogrešan email ili lozinka.'
+      : error
+      ? 'Greška pri prijavi. Pokušajte ponovo.'
+      : null;
+
   return (
     <form
       action={loginAction}
       className="rounded-2xl p-6 border"
       style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
-      {error === 'invalid_credentials' && (
+      {errorMessage && (
         <div
           className="mb-4 px-4 py-3 rounded-lg text-sm"
           style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
         >
-          Pogrešan email ili lozinka.
+          {errorMessage}
         </div>
       )}
 
