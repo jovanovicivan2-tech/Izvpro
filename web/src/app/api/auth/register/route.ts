@@ -66,15 +66,18 @@ export async function POST(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1. Kreirati Supabase auth korisnika
-    const { data: authData, error: authError } = await anonClient.auth.signUp({
+    // 1. Kreirati Supabase auth korisnika — koristimo admin.createUser sa email_confirm=true
+    // tako da korisnik može odmah da se uloguje kada admin aktivira kancelariju
+    // (email verifikacija nije potrebna jer admin ionako kontroliše aktivaciju)
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
+      email_confirm: true,
     });
 
     if (authError || !authData?.user) {
       console.error('[TRACE][register] auth error:', authError?.message);
-      const msg = authError?.message?.includes('already registered')
+      const msg = authError?.message?.includes('already registered') || authError?.message?.includes('already exists')
         ? 'email_taken'
         : 'auth_error';
       return NextResponse.redirect(
