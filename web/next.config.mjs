@@ -1,13 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-      },
-    ],
-  },
+  headers: async () => [
+    {
+      source: '/login',
+      headers: [
+        { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+      ],
+    },
+    {
+      source: '/dashboard',
+      headers: [
+        { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;
