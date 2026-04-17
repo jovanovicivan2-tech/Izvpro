@@ -133,12 +133,28 @@ export default async function PredmetiPage({ searchParams }: PageProps) {
             {totalPages > 1 && <span> · stranica {page}/{totalPages}</span>}
           </p>
         </div>
-        <Link
-          href="/predmeti/novi"
-          style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', borderRadius: 'var(--radius-md)', padding: '0.5rem 1.1rem', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}
-        >
-          + Novi predmet
-        </Link>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Link
+            href="/uvoz"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'var(--color-surface)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '0.5rem 1rem', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Uvoz
+          </Link>
+          <a
+            href="/api/predmeti/izvoz"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'var(--color-surface)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '0.5rem 1rem', fontSize: 'var(--text-sm)', fontWeight: 500, textDecoration: 'none' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Izvoz
+          </a>
+          <Link
+            href="/predmeti/novi"
+            style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', borderRadius: 'var(--radius-md)', padding: '0.5rem 1.1rem', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}
+          >
+            + Novi predmet
+          </Link>
+        </div>
       </div>
 
       {/* Pretraga + Filteri */}
