@@ -10,12 +10,11 @@ export async function POST(request: NextRequest) {
   console.log('[TRACE][login] route handler start email=' + email);
 
   if (!email || !password) {
-    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url));
+    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
   }
 
   const cookieStore = await cookies();
 
-  // Skupljamo cookies koje Supabase želi da upiše
   const cookiesToWrite: { name: string; value: string; options: Record<string, unknown> }[] = [];
 
   const supabase = createServerClient(
@@ -42,11 +41,11 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.log('[TRACE][login] redirect=/login?error=invalid_credentials');
-    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url));
+    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
   }
 
-  // Pravimo redirect response i EKSPLICITNO upisujemo sve Supabase cookies u njega
-  const response = NextResponse.redirect(new URL('/dashboard', request.url));
+  // 303 See Other — forsira browser da uradi GET /dashboard, ne POST
+  const response = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
 
   cookiesToWrite.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2]);
