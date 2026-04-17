@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 export interface TenantContext {
   userId: string;
@@ -9,53 +10,99 @@ export interface TenantContext {
   officeId: string;
 }
 
-/**
- * Koristi se na vrhu svakog server componenta i server actiona.
- * Vraća { userId, userEmail, officeId } ili redirectuje na /login.
- * Nikad ne vraća null — ako nema korisnika ili office_id, redirect.
- *
- * Koristi getSession() umesto getUser() da izbegne API poziv koji može
- * failovati zbog refresh_token_not_found greške.
- */
+const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
+const SESSION_COOKIE = `sb-${PROJECT_REF}-auth-token`;
+
+interface StoredSession {
+  access_token: string;
+  refresh_token: string;
+  user?: { id: string; email?: string };
+}
+
+async function readSessionFromCookie(): Promise<StoredSession | null> {
+  try {
+    const cookieStore = await cookies();
+
+    let raw = cookieStore.get(SESSION_COOKIE)?.value;
+
+    if (!raw) {
+      let combined = '';
+      for (let i = 0; i < 10; i++) {
+        const chunk = cookieStore.get(`${SESSION_COOKIE}.${i}`)?.value;
+        if (!chunk) break;
+        combined += chunk;
+      }
+      if (combined) raw = combined;
+    }
+
+    if (!raw) return null;
+
+    let session: StoredSession;
+    try {
+      session = JSON.parse(raw);
+    } catch {
+      session = JSON.parse(decodeURIComponent(raw));
+    }
+
+    if (!session?.access_token) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireTenantContext(): Promise<TenantContext> {
-  const supabase = await createClient();
+  const session = await readSessionFromCookie();
 
-  console.log('[TRACE][tenant] enter getSession');
+  console.log('[TRACE][tenant] session=' + !!session + ' userId=' + (session?.user?.id ?? 'null'));
 
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-
-  const user = session?.user ?? null;
-
-  console.log('[TRACE][tenant] getSession userId=' + (user?.id ?? 'null') + ' error=' + (sessionError?.message ?? 'none'));
-
-  if (sessionError || !user) {
-    console.log('[TRACE][tenant] no_user redirect=/login');
+  if (!session?.access_token || !session?.user?.id) {
+    console.log('[TRACE][tenant] no_session → redirect /login');
     redirect('/login');
   }
 
-  console.log('[TRACE][tenant] query korisnici userId=' + user!.id);
+  const userId = session!.user!.id;
+  const userEmail = session!.user?.email ?? '';
+
+  // Koristimo @supabase/ssr createServerClient koji ispravno radi sa REST API
+  // i setujemo sesiju direktno iz cookie vrednosti — bez refresh API poziva
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    }
+  );
+
+  // Postavljamo sesiju direktno — ovo ne okida refresh jer imamo oba tokena
+  await supabase.auth.setSession({
+    access_token: session!.access_token,
+    refresh_token: session!.refresh_token ?? '',
+  });
 
   const { data: profile, error: profileError } = await supabase
     .from('korisnici')
     .select('office_id')
-    .eq('id', user!.id)
+    .eq('id', userId)
     .single();
 
-  console.log('[TRACE][tenant] korisnici officeId=' + (profile?.office_id ?? 'null') + ' error=' + (profileError?.message ?? 'none') + ' code=' + (profileError?.code ?? 'none'));
+  console.log('[TRACE][tenant] officeId=' + (profile?.office_id ?? 'null') + ' error=' + (profileError?.message ?? 'none'));
 
   if (profileError || !profile?.office_id) {
-    console.log('[TRACE][tenant] no_office_id redirect=/login');
+    console.log('[TRACE][tenant] no_office_id → redirect /login');
     redirect('/login');
   }
 
-  console.log('[TRACE][tenant] ok officeId=' + profile!.office_id);
-
   return {
-    userId: user!.id,
-    userEmail: user!.email ?? '',
+    userId,
+    userEmail,
     officeId: profile!.office_id,
   };
 }
