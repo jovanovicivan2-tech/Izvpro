@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 
 export interface TenantContext {
   userId: string;
@@ -12,10 +11,12 @@ export interface TenantContext {
 
 const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
 const SESSION_COOKIE = `sb-${PROJECT_REF}-auth-token`;
+const SUPABASE_URL = 'https://bwpyivqdinemhfrrjdhu.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHlpdnFkaW5lbWhmcnJqZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODM5NzksImV4cCI6MjA5MTA1OTk3OX0.OQVRAWRmCxqcsc1T0jwHVrvlgifgrnc3MwiXLUOgj8k';
 
 interface StoredSession {
   access_token: string;
-  refresh_token: string;
+  refresh_token?: string;
   user?: { id: string; email?: string };
 }
 
@@ -63,46 +64,30 @@ export async function requireTenantContext(): Promise<TenantContext> {
 
   const userId = session!.user!.id;
   const userEmail = session!.user?.email ?? '';
+  const accessToken = session!.access_token;
 
-  // Koristimo @supabase/ssr createServerClient koji ispravno radi sa REST API
-  // i setujemo sesiju direktno iz cookie vrednosti — bez refresh API poziva
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  // Direktan fetch ka Supabase REST API — zaobilazimo auth SDK i refresh logiku
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/korisnici?select=office_id&id=eq.${userId}&limit=1`,
     {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set() {},
-        remove() {},
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'apikey': ANON_KEY,
+        'Accept': 'application/json',
       },
+      cache: 'no-store',
     }
   );
 
-  // Postavljamo sesiju direktno — ovo ne okida refresh jer imamo oba tokena
-  await supabase.auth.setSession({
-    access_token: session!.access_token,
-    refresh_token: session!.refresh_token ?? '',
-  });
+  const rows = res.ok ? await res.json() : [];
+  const officeId = rows?.[0]?.office_id ?? null;
 
-  const { data: profile, error: profileError } = await supabase
-    .from('korisnici')
-    .select('office_id')
-    .eq('id', userId)
-    .single();
+  console.log('[TRACE][tenant] status=' + res.status + ' officeId=' + officeId);
 
-  console.log('[TRACE][tenant] officeId=' + (profile?.office_id ?? 'null') + ' error=' + (profileError?.message ?? 'none'));
-
-  if (profileError || !profile?.office_id) {
+  if (!officeId) {
     console.log('[TRACE][tenant] no_office_id → redirect /login');
     redirect('/login');
   }
 
-  return {
-    userId,
-    userEmail,
-    officeId: profile!.office_id,
-  };
+  return { userId, userEmail, officeId };
 }
