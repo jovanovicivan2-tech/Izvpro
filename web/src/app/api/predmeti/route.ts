@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireTenantContext } from '@/lib/auth/require-tenant-context';
+import { logActivity } from '@/lib/activity-log';
 
 export async function POST(request: NextRequest) {
   console.log('[TRACE][api/predmeti] POST kreiranje predmeta');
 
   try {
-    const { officeId } = await requireTenantContext();
+    const { officeId, userId, userEmail } = await requireTenantContext();
     const supabase = await createClient();
 
     const formData = await request.formData();
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL('/predmeti/novi?error=validation', request.url), { status: 303 });
     }
 
-    const { error } = await supabase.from('predmeti').insert({
+    const { data: novPredmet, error } = await supabase.from('predmeti').insert({
       office_id: officeId,
       broj_predmeta,
       godina,
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       rok_sledece_radnje,
       napomena,
       status: 'aktivan',
-    });
+    }).select('id').single();
 
     if (error) {
       console.error('[TRACE][api/predmeti] insert error:', error.message);
@@ -48,6 +49,17 @@ export async function POST(request: NextRequest) {
         { status: 303 }
       );
     }
+
+    // Audit log — kreiranje
+    await logActivity({
+      supabase,
+      officeId,
+      predmetId: novPredmet?.id ?? null,
+      korisnikId: userId,
+      korisnikEmail: userEmail,
+      akcija: 'kreiran',
+      detalji: { broj_predmeta, godina, poverilac, duznik, iznos_glavnice },
+    });
 
     console.log('[TRACE][api/predmeti] predmet kreiran OK → redirect /predmeti');
     return NextResponse.redirect(new URL('/predmeti', request.url), { status: 303 });

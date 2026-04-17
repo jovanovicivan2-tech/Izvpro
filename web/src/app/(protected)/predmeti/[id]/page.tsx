@@ -67,9 +67,10 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
     .from('predmeti').select('*').eq('id', id).eq('office_id', officeId).single();
   if (fetchError || !predmet) notFound();
 
-  const [{ data: rokovi }, { data: nacrti }] = await Promise.all([
+  const [{ data: rokovi }, { data: nacrti }, { data: activityLog }] = await Promise.all([
     supabase.from('rokovi').select('*').eq('predmet_id', id).eq('office_id', officeId).order('datum_roka', { ascending: true }),
     supabase.from('nacrti').select('id, tip_akta, created_at').eq('predmet_id', id).eq('office_id', officeId).order('created_at', { ascending: false }).limit(5),
+    supabase.from('activity_log').select('*').eq('predmet_id', id).eq('office_id', officeId).order('created_at', { ascending: false }).limit(30),
   ]);
 
   const p = predmet as Predmet;
@@ -292,6 +293,134 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
 
         </div>
       </div>
+
+      {/* Istorija izmena — Audit Log */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <div
+          className="rounded-xl border overflow-hidden"
+          style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-sm)' }}
+        >
+          <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>Istorija izmena</p>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 2 }}>Sve akcije na ovom predmetu</p>
+            </div>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-faint)' }}>{activityLog?.length ?? 0} unosa</span>
+          </div>
+
+          {!activityLog || activityLog.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-faint)' }}>Nema zabeleženih izmena.</p>
+            </div>
+          ) : (
+            <div>
+              {activityLog.map((entry: {
+                id: string;
+                akcija: string;
+                korisnik_email: string | null;
+                detalji: Record<string, unknown> | null;
+                created_at: string;
+              }, idx: number) => {
+                const datum = new Date(entry.created_at);
+                const datumStr = datum.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const vremStr = datum.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+
+                const AKCIJA_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+                  kreiran: {
+                    label: 'Predmet kreiran',
+                    color: 'var(--color-success)',
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+                  },
+                  izmenjen: {
+                    label: 'Predmet izmenjen',
+                    color: 'var(--color-primary)',
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+                  },
+                  status_promenjen: {
+                    label: 'Status promenjen',
+                    color: 'var(--color-warning)',
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>,
+                  },
+                  obrisan: {
+                    label: 'Predmet obrisan',
+                    color: 'var(--color-error)',
+                    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>,
+                  },
+                };
+
+                const cfg = AKCIJA_LABELS[entry.akcija] ?? {
+                  label: entry.akcija,
+                  color: 'var(--color-text-muted)',
+                  icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>,
+                };
+
+                // Čitljiv opis detalja
+                let detaljTekst: string | null = null;
+                if (entry.akcija === 'status_promenjen' && entry.detalji) {
+                  const STATUS_L: Record<string, string> = { aktivan: 'Aktivan', obustavljen: 'Obustavljen', zavrsen: 'Završen', arhiviran: 'Arhiviran' };
+                  detaljTekst = `${STATUS_L[entry.detalji.stari as string] ?? entry.detalji.stari} → ${STATUS_L[entry.detalji.novi as string] ?? entry.detalji.novi}`;
+                } else if (entry.akcija === 'izmenjen' && entry.detalji) {
+                  const promene = Object.entries(entry.detalji)
+                    .filter(([k]) => !['office_id'].includes(k))
+                    .map(([k]) => k.replace(/_/g, ' '))
+                    .join(', ');
+                  if (promene) detaljTekst = `Izmenjeno: ${promene}`;
+                } else if (entry.akcija === 'kreiran' && entry.detalji) {
+                  detaljTekst = `${entry.detalji.broj_predmeta}/${entry.detalji.godina} · ${entry.detalji.duznik}`;
+                }
+
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.875rem',
+                      padding: '0.85rem 1.25rem',
+                      borderBottom: idx < activityLog.length - 1 ? '1px solid var(--color-border)' : 'none',
+                    }}
+                  >
+                    {/* Ikona */}
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 'var(--radius-full)',
+                      background: `color-mix(in srgb, ${cfg.color} 12%, transparent)`,
+                      color: cfg.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, marginTop: 1,
+                    }}>
+                      {cfg.icon}
+                    </div>
+
+                    {/* Tekst */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: cfg.color }}>
+                          {cfg.label}
+                        </span>
+                        {detaljTekst && (
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                            — {detaljTekst}
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-faint)', marginTop: 2 }}>
+                        {entry.korisnik_email ?? 'sistem'}
+                      </p>
+                    </div>
+
+                    {/* Datum/vreme */}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontVariantNumeric: 'tabular-nums' }}>{datumStr}</p>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-faint)', marginTop: 1 }}>{vremStr}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }
