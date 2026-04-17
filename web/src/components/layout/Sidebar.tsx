@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { usePathname } from 'next/navigation';
 
 const navItems = [
   {
@@ -54,13 +53,10 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
-
   async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+    // POST na server-side logout route handler koji čisti httpOnly cookie
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
   }
 
   return (
