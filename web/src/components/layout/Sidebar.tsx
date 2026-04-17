@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   {
@@ -50,6 +51,16 @@ const navItems = [
   },
 ];
 
+const adminItem = {
+  href: '/admin',
+  label: 'Admin panel',
+  icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+};
+
 const bottomItems = [
   {
     href: '/statistike',
@@ -88,6 +99,15 @@ const navLinkBase: React.CSSProperties = {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  // Proveriti super admin status pri mount-u
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.is_super_admin) setIsSuperAdmin(true); })
+      .catch(() => {});
+  }, []);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -168,6 +188,28 @@ export default function Sidebar() {
 
         {/* Divider */}
         <div style={{ height: '1px', background: 'var(--color-border)', margin: '0.75rem 0.75rem' }} />
+
+        {/* Admin panel — samo za super admina */}
+        {isSuperAdmin && (() => {
+          const item = adminItem;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                ...navLinkBase,
+                background: isActive ? 'rgba(239,68,68,0.1)' : 'transparent',
+                color: isActive ? '#dc2626' : 'var(--color-text-muted)',
+                fontWeight: isActive ? 600 : 400,
+                borderLeft: isActive ? '2px solid #dc2626' : '2px solid transparent',
+              }}
+            >
+              <span style={{ opacity: isActive ? 1 : 0.7, flexShrink: 0 }}>{item.icon}</span>
+              {item.label}
+            </Link>
+          );
+        })()}
 
         {/* Bottom nav items */}
         {bottomItems.map((item) => {

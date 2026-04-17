@@ -58,6 +58,31 @@ export async function POST(request: NextRequest) {
     }
 
     const session = data.session;
+
+    // Proveriti da li je kancelarija aktivna
+    const officeRes = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/korisnici?select=office_id,offices(status)&id=eq.${session.user.id}&limit=1`,
+      {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'Accept': 'application/json',
+        },
+      }
+    );
+    const officeRows = officeRes.ok ? await officeRes.json() : [];
+    const officeStatus = officeRows?.[0]?.offices?.status ?? null;
+    console.log(`[TRACE][login] officeStatus=${officeStatus}`);
+
+    if (officeStatus === 'pending') {
+      return NextResponse.redirect(new URL('/login?error=office_pending', request.url), { status: 303 });
+    }
+    if (officeStatus === 'suspended') {
+      return NextResponse.redirect(new URL('/login?error=office_suspended', request.url), { status: 303 });
+    }
+    if (!officeStatus || officeStatus !== 'active') {
+      return NextResponse.redirect(new URL('/login?error=office_inactive', request.url), { status: 303 });
+    }
     // Serializujemo session objekat tačno onako kako @supabase/ssr to očekuje
     const sessionJson = JSON.stringify({
       access_token: session.access_token,

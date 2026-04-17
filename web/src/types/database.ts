@@ -3,6 +3,8 @@
 
 export type UserRole = 'admin' | 'operater' | 'pregled';
 
+export type OfficeStatus = 'pending' | 'active' | 'suspended';
+
 export type PredmetStatus = 'aktivan' | 'obustavljen' | 'zavrsen' | 'arhiviran';
 
 export type RokStatus = 'aktivan' | 'hitan' | 'zavrsen';
@@ -20,6 +22,9 @@ export interface Office {
   adresa: string | null;
   email: string | null;
   telefon: string | null;
+  pib: string | null;
+  website: string | null;
+  status: OfficeStatus;
   created_at: string;
 }
 
@@ -33,6 +38,7 @@ export interface Korisnik {
   email: string;
   role: UserRole;
   aktivan: boolean;
+  is_super_admin: boolean;
   created_at: string;
 }
 

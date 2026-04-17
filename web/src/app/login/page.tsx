@@ -7,12 +7,14 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
-  const errorMessage =
-    error === 'invalid_credentials'
-      ? 'Pogrešan email ili lozinka.'
-      : error
-      ? 'Greška pri prijavi. Pokušajte ponovo.'
-      : null;
+  const errorMessages: Record<string, string> = {
+    invalid_credentials: 'Pogrešan email ili lozinka.',
+    office_pending: 'Vaš nalog čeka aktivaciju od strane administratora.',
+    office_suspended: 'Nalog Vaše kancelarije je deaktiviran. Kontaktirajte podršku.',
+    office_inactive: 'Nalog nije aktivan. Kontaktirajte podršku.',
+    server_error: 'Serverska greška. Pokušajte ponovo.',
+  };
+  const errorMessage = error ? (errorMessages[error] ?? 'Greška pri prijavi. Pokušajte ponovo.') : null;
 
   return (
     <form
@@ -202,7 +204,8 @@ export default function LoginPage() {
         </Suspense>
 
         <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-faint)' }}>
-          Samo ovlašćeni korisnici kancelarije
+          Nemate nalog?{' '}
+          <a href="/register" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Registrujte kancelariju</a>
         </p>
       </div>
     </div>
