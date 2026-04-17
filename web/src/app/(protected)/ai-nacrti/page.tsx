@@ -208,9 +208,15 @@ export default async function AiNacrtiPage({ searchParams }: PageProps) {
                       <p style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>{s.naziv}</p>
                       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 2 }}>{TIP_AKTA_LABELS[s.tip_akta]} · {s.template_text.length} znakova</p>
                     </div>
-                    <span style={{ padding: '0.1rem 0.5rem', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 600, background: s.aktivan ? 'var(--color-success-highlight)' : 'var(--color-surface-offset)', color: s.aktivan ? 'var(--color-success)' : 'var(--color-text-muted)' }}>
-                      {s.aktivan ? 'Aktivan' : 'Neaktivan'}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ padding: '0.1rem 0.5rem', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 600, background: s.aktivan ? 'var(--color-success-highlight)' : 'var(--color-surface-offset)', color: s.aktivan ? 'var(--color-success)' : 'var(--color-text-muted)' }}>
+                        {s.aktivan ? 'Aktivan' : 'Neaktivan'}
+                      </span>
+                      <form method="POST" action={`/api/sabloni/${s.id}`} style={{ display: 'inline' }} onSubmit={(e) => { if (!confirm('Obrisati šablon?')) e.preventDefault(); }}>
+                        <input type="hidden" name="_action" value="delete" />
+                        <button type="submit" style={{ padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-sm)', fontSize: '0.65rem', border: '1px solid var(--color-border)', color: 'var(--color-text-faint)', background: 'transparent', cursor: 'pointer' }}>✕</button>
+                      </form>
+                    </div>
                   </div>
                 ))}
               </div>
