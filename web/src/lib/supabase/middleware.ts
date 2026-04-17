@@ -29,12 +29,9 @@ export async function updateSession(request: NextRequest, reqId?: string) {
     },
   });
 
-  // getSession() čita JWT lokalno iz cookie-ja — bez remote poziva.
-  // Dovoljno za routing odluku. Brže i pouzdanije u edge runtimeu.
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
 
-  console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} session=${!!session} userId=${user?.id ?? 'null'}`);
+  console.log(`[TRACE][middleware] reqId=${rid} path=${pathname} userId=${user?.id ?? 'null'} error=${getUserError?.message ?? 'none'}`);
 
   const isPublicPath =
     pathname.startsWith('/login') ||

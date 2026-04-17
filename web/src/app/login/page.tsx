@@ -1,58 +1,32 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
-    searchParams.get('error') === 'invalid_credentials'
+  const error = searchParams.get('error');
+
+  const errorMessage =
+    error === 'invalid_credentials'
       ? 'Pogrešan email ili lozinka.'
-      : searchParams.get('error')
+      : error
       ? 'Greška pri prijavi. Pokušajte ponovo.'
-      : null
-  );
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
-
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (signInError) {
-      setError('Pogrešan email ili lozinka.');
-      setLoading(false);
-      return;
-    }
-
-    // Hard navigation — garantuje da middleware čita svež session cookie
-    window.location.href = '/dashboard';
-  }
+      : null;
 
   return (
     <form
-      onSubmit={handleSubmit}
+      method="POST"
+      action="/api/auth/login"
       className="rounded-2xl p-6 border"
       style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
-      {error && (
+      {errorMessage && (
         <div
-          className="mb-4 px-4 py-3 rounded-lg text-sm"
-          style={{ background: 'rgba(161,44,123,0.1)', color: 'var(--color-error)' }}
+          className="mb-4 px-4 py-3 rounded-lg text-sm font-medium"
+          style={{ background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.3)' }}
         >
-          {error}
+          {errorMessage}
         </div>
       )}
 
@@ -90,15 +64,10 @@ function LoginForm() {
 
       <button
         type="submit"
-        disabled={loading}
         className="w-full py-2.5 rounded-lg text-sm font-semibold text-white"
-        style={{
-          background: 'var(--color-primary)',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.7 : 1,
-        }}
+        style={{ background: 'var(--color-primary)', cursor: 'pointer' }}
       >
-        {loading ? 'Prijava...' : 'Prijavi se'}
+        Prijavi se
       </button>
     </form>
   );
