@@ -32,7 +32,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ filter?: string; error?: string }>;
+  searchParams: Promise<{ filter?: string; error?: string; q?: string }>;
 }
 
 type RokWithPredmet = Rok & {
@@ -42,7 +42,8 @@ type RokWithPredmet = Rok & {
 export default async function RokoviPage({ searchParams }: PageProps) {
   console.log('[TRACE][page] render path=/rokovi');
 
-  const { filter, error } = await searchParams;
+  const { filter, error, q } = await searchParams;
+  const search = q?.trim() ?? '';
   const { officeId } = await requireTenantContext();
   const supabase = await createClient();
 
@@ -54,6 +55,10 @@ export default async function RokoviPage({ searchParams }: PageProps) {
     .select('*, predmeti(id, broj_predmeta, godina, duznik)')
     .eq('office_id', officeId)
     .order('datum_roka', { ascending: true });
+
+  if (search) {
+    query = query.or(`naziv_roka.ilike.%${search}%,predmeti.duznik.ilike.%${search}%`);
+  }
 
   if (filter === 'danas') {
     query = query.eq('datum_roka', today).neq('status', 'zavrsen');
@@ -79,6 +84,7 @@ export default async function RokoviPage({ searchParams }: PageProps) {
     .order('broj_predmeta', { ascending: true });
 
   const activeFilter = filter || 'aktivni';
+  const searchQuery = search ? `&q=${encodeURIComponent(search)}` : '';
   const filterStyle = (f: string): React.CSSProperties => ({
     padding: '0.35rem 0.85rem',
     borderRadius: 'var(--radius-full)',
@@ -99,8 +105,26 @@ export default async function RokoviPage({ searchParams }: PageProps) {
           <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Rokovi</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
             {rokovi?.length ?? 0} {activeFilter === 'zavrsen' ? 'završenih' : 'aktivnih'} rokova
+            {search && <span style={{ color: 'var(--color-primary)' }}> · pretraga: "{search}"</span>}
           </p>
         </div>
+        {/* Search */}
+        <form method="GET" action="/rokovi" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {filter && <input type="hidden" name="filter" value={filter} />}
+          <input
+            name="q"
+            type="search"
+            defaultValue={search}
+            placeholder="Pretraži rokove ili dužnika..."
+            style={{ ...inputStyle, width: '260px' }}
+          />
+          <button type="submit" style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, background: 'var(--color-primary)', color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Traži
+          </button>
+          {search && (
+            <a href={`/rokovi${filter ? `?filter=${filter}` : ''}`} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', whiteSpace: 'nowrap' }}>✕ Resetuj</a>
+          )}
+        </form>
       </div>
 
       {error && (
@@ -118,10 +142,10 @@ export default async function RokoviPage({ searchParams }: PageProps) {
 
           {/* Filteri */}
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-            <Link href="/rokovi" style={filterStyle('aktivni')}>Svi aktivni</Link>
-            <Link href="/rokovi?filter=danas" style={filterStyle('danas')}>Danas</Link>
-            <Link href="/rokovi?filter=nedelja" style={filterStyle('nedelja')}>Ova nedelja</Link>
-            <Link href="/rokovi?filter=zavrsen" style={filterStyle('zavrsen')}>Završeni</Link>
+            <Link href={`/rokovi${searchQuery}`} style={filterStyle('aktivni')}>Svi aktivni</Link>
+            <Link href={`/rokovi?filter=danas${searchQuery}`} style={filterStyle('danas')}>Danas</Link>
+            <Link href={`/rokovi?filter=nedelja${searchQuery}`} style={filterStyle('nedelja')}>Ova nedelja</Link>
+            <Link href={`/rokovi?filter=zavrsen${searchQuery}`} style={filterStyle('zavrsen')}>Završeni</Link>
           </div>
 
           {rokoviError ? (
