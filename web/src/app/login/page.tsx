@@ -2,7 +2,6 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { loginAction } from './actions';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -17,7 +16,8 @@ function LoginForm() {
 
   return (
     <form
-      action={loginAction}
+      method="POST"
+      action="/api/auth/login"
       className="rounded-2xl p-6 border"
       style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
