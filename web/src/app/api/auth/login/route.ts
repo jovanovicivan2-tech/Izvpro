@@ -1,50 +1,58 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  try {
+    const formData = await request.formData();
+    const email = (formData.get('email') ?? '') as string;
+    const password = (formData.get('password') ?? '') as string;
 
-  if (!email || !password) {
-    return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
-  }
-
-  // Pravimo response objekat unapred — cookies se upisuju direktno u njega
-  const successResponse = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
-  const errorResponse = () => NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          // Upisujemo direktno u response koji idemo da vratimo
-          successResponse.cookies.set(name, value, options as Parameters<typeof successResponse.cookies.set>[2]);
-          console.log(`[TRACE][login] cookie set: ${name}`);
-        },
-        remove(name: string, options: CookieOptions) {
-          successResponse.cookies.set(name, '', { ...options as object, maxAge: 0 } as Parameters<typeof successResponse.cookies.set>[2]);
-        },
-      },
+    if (!email || !password) {
+      return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
     }
-  );
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Privremeno čuvamo cookies koje Supabase želi da upiše
+    const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = [];
 
-  console.log(`[TRACE][login] signIn ok=${!!data?.session} error=${error?.message ?? 'none'}`);
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (cookies) => {
+            cookies.forEach((c) => pendingCookies.push({ name: c.name, value: c.value, options: c.options as Record<string, unknown> ?? {} }));
+          },
+        },
+      }
+    );
 
-  if (error || !data.session) {
-    return errorResponse();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    console.log(`[TRACE][login] ok=${!!data?.session} cookies=${pendingCookies.map(c => c.name).join(',')} error=${error?.message ?? 'none'}`);
+
+    if (error || !data?.session) {
+      return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
+    }
+
+    // Login uspeo — pravimo redirect response i upisujemo cookies
+    const response = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
+
+    pendingCookies.forEach(({ name, value, options }) => {
+      response.cookies.set({
+        name,
+        value,
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        ...(options as object),
+      });
+    });
+
+    return response;
+  } catch (err) {
+    console.error('[TRACE][login] UNHANDLED ERROR:', err);
+    return NextResponse.redirect(new URL('/login?error=server_error', request.url), { status: 303 });
   }
-
-  // Cookies su već upisani u successResponse tokom signInWithPassword
-  const cookieNames = successResponse.cookies.getAll().map(c => c.name);
-  console.log(`[TRACE][login] cookies_in_response=[${cookieNames.join(',')}] → redirect=/dashboard`);
-
-  return successResponse;
 }
