@@ -40,6 +40,26 @@ export interface Korisnik {
 // Tabela: predmeti
 // Kolone uskladjene sa predmeti/page.tsx queryjima
 // -------------------------------------------------------
+// Tabela: deliveries (dostava pismena)
+// -------------------------------------------------------
+export type TipPismena = 'resenje' | 'zakljucak' | 'dopis' | 'obavestenje' | 'nalog' | 'ostalo';
+export type StatusDostave = 'poslato' | 'primljeno' | 'vraceno' | 'odbijeno';
+
+export interface Delivery {
+  id: string;
+  predmet_id: string;
+  office_id: string;
+  tip_pismena: TipPismena;
+  primalac: string;
+  adresa_dostave: string | null;
+  datum_slanja: string;
+  datum_prijema: string | null;
+  status: StatusDostave;
+  napomena: string | null;
+  created_at: string;
+}
+
+// -------------------------------------------------------
 // Tabela: payments (uplate po predmetu)
 // -------------------------------------------------------
 export type TipUplate = 'uplata' | 'povracaj' | 'troskovi' | 'kamata';
