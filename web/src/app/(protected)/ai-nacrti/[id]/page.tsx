@@ -168,6 +168,13 @@ export default async function NacrtDetailPage({ params, searchParams }: PageProp
               >
                 Štampaj / Export PDF
               </a>
+              <a
+                href={`/api/nacrti/${id}/docx`}
+                download
+                style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)', textDecoration: 'none', textAlign: 'center' as const, display: 'block' }}
+              >
+                Export DOCX (Word)
+              </a>
               <Link
                 href={`/ai-nacrti?tab=novi&predmet_id=${predmet?.id ?? ''}`}
                 style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, border: '1px solid var(--color-border)', color: 'var(--color-text)', background: 'transparent', textDecoration: 'none', textAlign: 'center' as const }}
