@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`[TRACE][izvoz] office=${ctx.officeId} redova=${predmeti.length}`);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

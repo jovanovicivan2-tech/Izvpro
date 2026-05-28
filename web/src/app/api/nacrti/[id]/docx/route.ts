@@ -280,7 +280,7 @@ export async function GET(
     : 'nacrt';
   const filename = `${nacrt.tip_akta}_${predmetBroj}.docx`;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     status: 200,
     headers: {
       'Content-Type':
