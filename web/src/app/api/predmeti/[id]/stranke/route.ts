@@ -4,13 +4,14 @@ import { requireTenantContext } from '@/lib/auth/require-tenant-context';
 // GET /api/predmeti/[id]/stranke
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/case_parties?predmet_id=eq.${params.id}&order=created_at.asc`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/case_parties?predmet_id=eq.${id}&order=created_at.asc`,
     {
       headers: {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,8 +27,9 @@ export async function GET(
 // POST /api/predmeti/[id]/stranke
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -45,7 +47,7 @@ export async function POST(
       },
       body: JSON.stringify({
         ...body,
-        predmet_id: params.id,
+        predmet_id: id,
         office_id: ctx.officeId,
       }),
     }
@@ -58,8 +60,9 @@ export async function POST(
 // DELETE /api/predmeti/[id]/stranke?strankaId=uuid
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -67,7 +70,7 @@ export async function DELETE(
   if (!strankaId) return NextResponse.json({ error: 'strankaId required' }, { status: 400 });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/case_parties?id=eq.${strankaId}&predmet_id=eq.${params.id}`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/case_parties?id=eq.${strankaId}&predmet_id=eq.${id}`,
     {
       method: 'DELETE',
       headers: {

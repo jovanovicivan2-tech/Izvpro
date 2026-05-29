@@ -4,13 +4,14 @@ import { requireTenantContext } from '@/lib/auth/require-tenant-context';
 // GET /api/predmeti/[id]/uplate
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/payments?predmet_id=eq.${params.id}&order=datum_uplate.desc`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/payments?predmet_id=eq.${id}&order=datum_uplate.desc`,
     {
       headers: {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,8 +27,9 @@ export async function GET(
 // POST /api/predmeti/[id]/uplate
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -45,7 +47,7 @@ export async function POST(
       },
       body: JSON.stringify({
         ...body,
-        predmet_id: params.id,
+        predmet_id: id,
         office_id: ctx.officeId,
         iznos: parseFloat(body.iznos),
       }),
@@ -59,8 +61,9 @@ export async function POST(
 // DELETE /api/predmeti/[id]/uplate?uplataId=uuid
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -68,7 +71,7 @@ export async function DELETE(
   if (!uplataId) return NextResponse.json({ error: 'uplataId required' }, { status: 400 });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/payments?id=eq.${uplataId}&predmet_id=eq.${params.id}`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/payments?id=eq.${uplataId}&predmet_id=eq.${id}`,
     {
       method: 'DELETE',
       headers: {

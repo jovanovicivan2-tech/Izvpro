@@ -7,13 +7,14 @@ const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 // GET /api/predmeti/[id]/dostava
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/deliveries?predmet_id=eq.${params.id}&order=datum_slanja.desc`,
+    `${SUPABASE_URL}/rest/v1/deliveries?predmet_id=eq.${id}&order=datum_slanja.desc`,
     {
       headers: {
         apikey: ANON_KEY,
@@ -28,8 +29,9 @@ export async function GET(
 // POST /api/predmeti/[id]/dostava
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -45,7 +47,7 @@ export async function POST(
     },
     body: JSON.stringify({
       ...body,
-      predmet_id: params.id,
+      predmet_id: id,
       office_id: ctx.officeId,
     }),
   });
@@ -57,8 +59,9 @@ export async function POST(
 // PATCH /api/predmeti/[id]/dostava?dostavaId=uuid — ažuriranje statusa/datuma prijema
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -68,7 +71,7 @@ export async function PATCH(
   const body = await req.json();
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/deliveries?id=eq.${dostavaId}&predmet_id=eq.${params.id}`,
+    `${SUPABASE_URL}/rest/v1/deliveries?id=eq.${dostavaId}&predmet_id=eq.${id}`,
     {
       method: 'PATCH',
       headers: {
@@ -88,8 +91,9 @@ export async function PATCH(
 // DELETE /api/predmeti/[id]/dostava?dostavaId=uuid
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const ctx = await requireTenantContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -97,7 +101,7 @@ export async function DELETE(
   if (!dostavaId) return NextResponse.json({ error: 'dostavaId required' }, { status: 400 });
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/deliveries?id=eq.${dostavaId}&predmet_id=eq.${params.id}`,
+    `${SUPABASE_URL}/rest/v1/deliveries?id=eq.${dostavaId}&predmet_id=eq.${id}`,
     {
       method: 'DELETE',
       headers: {

@@ -5,9 +5,10 @@ import { requireTenantContext } from '@/lib/auth/require-tenant-context';
 // DELETE /api/sabloni/[id]
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { officeId } = await requireTenantContext();
     const supabase = await createClient();
 
@@ -21,7 +22,7 @@ export async function POST(
     const { error } = await supabase
       .from('sabloni')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('office_id', officeId);
 
     if (error) {
