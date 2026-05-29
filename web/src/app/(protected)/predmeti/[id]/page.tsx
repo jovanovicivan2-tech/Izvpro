@@ -6,6 +6,7 @@ import type { Predmet, Rok } from '@/types/database';
 import StrankeSection from '@/components/predmeti/StrankeSection';
 import FinansijeSection from '@/components/predmeti/FinansijeSection';
 import DostavaSection from '@/components/predmeti/DostavaSection';
+import BeleskeSection from '@/components/predmeti/BeleskeSection';
 
 function formatDatum(d: string | null) {
   if (!d) return '—';
@@ -313,6 +314,11 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
       {/* Dostava pismena */}
       <div style={{ marginTop: '1.5rem' }}>
         <DostavaSection predmetId={id} />
+      </div>
+
+      {/* Beleške */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <BeleskeSection predmetId={id} />
       </div>
 
       {/* Istorija izmena — Audit Log */}

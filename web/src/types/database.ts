@@ -82,6 +82,19 @@ export interface Payment {
 }
 
 // -------------------------------------------------------
+// Tabela: beleske (beleške/komentari po predmetu)
+// -------------------------------------------------------
+export interface Beleska {
+  id: string;
+  predmet_id: string;
+  office_id: string;
+  tekst: string;
+  autor_email: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+// -------------------------------------------------------
 // Tabela: case_parties (stranke predmeta)
 // -------------------------------------------------------
 export type TipStranke = 'duznik' | 'poverilac' | 'zastupnik_duznika' | 'zastupnik_pov' | 'trece_lice';
