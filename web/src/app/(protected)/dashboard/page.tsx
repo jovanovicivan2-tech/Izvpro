@@ -38,9 +38,13 @@ export default async function DashboardPage() {
   const { officeId, userEmail } = await requireTenantContext();
   const supabase = await createClient();
 
+  const { data: officeSettings } = await supabase
+    .from('offices').select('podsetnik_dana').eq('id', officeId).single();
+  const podsetnikDana = officeSettings?.podsetnik_dana ?? 7;
+
   const today = new Date().toISOString().split('T')[0];
   const endOfWeek = new Date();
-  endOfWeek.setDate(endOfWeek.getDate() + 7);
+  endOfWeek.setDate(endOfWeek.getDate() + podsetnikDana);
   const endOfWeekStr = endOfWeek.toISOString().split('T')[0];
 
   const [
@@ -89,7 +93,7 @@ export default async function DashboardPage() {
       ),
     },
     {
-      label: 'Rokovi (7 dana)', value: rokoviNedelja ?? 0, danger: false, warn: (rokoviNedelja ?? 0) > 0,
+      label: `Rokovi (${podsetnikDana} dana)`, value: rokoviNedelja ?? 0, danger: false, warn: (rokoviNedelja ?? 0) > 0,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -285,7 +289,7 @@ export default async function DashboardPage() {
             className="flex items-center justify-between px-5 py-3.5"
             style={{ borderBottom: '1px solid var(--color-border)' }}
           >
-            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Rokovi — 7 dana</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Rokovi — {podsetnikDana} dana</p>
             <Link href="/rokovi" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-primary)', textDecoration: 'none' }}>
               Svi →
             </Link>
@@ -293,7 +297,7 @@ export default async function DashboardPage() {
 
           {!hitniRokovi || hitniRokovi.length === 0 ? (
             <div className="p-6 text-center">
-              <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>✓ Nema rokova u narednih 7 dana.</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>✓ Nema rokova u narednih {podsetnikDana} dana.</p>
             </div>
           ) : (
             <ul style={{ listStyle: 'none', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

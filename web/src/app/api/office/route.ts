@@ -16,13 +16,19 @@ export async function POST(request: NextRequest) {
     const email = (formData.get('email') as string)?.trim() || null;
     const telefon = (formData.get('telefon') as string)?.trim() || null;
 
+    // Prag za podsetnike (dana pre roka) — ograniči na 1–90, default 7
+    const podsetnikRaw = parseInt((formData.get('podsetnik_dana') as string) ?? '', 10);
+    const podsetnik_dana = Number.isFinite(podsetnikRaw)
+      ? Math.min(90, Math.max(1, podsetnikRaw))
+      : 7;
+
     if (!naziv) {
       return NextResponse.redirect(new URL('/podesavanja?error=validation', request.url), { status: 303 });
     }
 
     const { error } = await supabase
       .from('offices')
-      .update({ naziv, adresa, email, telefon })
+      .update({ naziv, adresa, email, telefon, podsetnik_dana })
       .eq('id', officeId);
 
     if (error) {

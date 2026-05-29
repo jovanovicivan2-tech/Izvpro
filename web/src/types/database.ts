@@ -25,6 +25,7 @@ export interface Office {
   pib: string | null;
   website: string | null;
   status: OfficeStatus;
+  podsetnik_dana: number;
   created_at: string;
 }
 

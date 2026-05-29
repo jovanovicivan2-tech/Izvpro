@@ -145,6 +145,13 @@ export default async function PodesavanjaPage({ searchParams }: PageProps) {
                     <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: '0.375rem', color: 'var(--color-text)' }}>Telefon</label>
                     <input name="telefon" type="text" defaultValue={o?.telefon ?? ''} style={inputStyle} />
                   </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: '0.375rem', color: 'var(--color-text)' }}>Podsetnik za rokove (dana pre)</label>
+                    <input name="podsetnik_dana" type="number" min={1} max={90} defaultValue={o?.podsetnik_dana ?? 7} style={inputStyle} />
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-faint)', marginTop: '0.25rem' }}>
+                      Rokovi u narednih toliko dana se ističu na kontrolnoj tabli.
+                    </p>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button type="submit" style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, background: 'var(--color-primary)', color: '#fff', border: 'none', cursor: 'pointer' }}>
@@ -154,7 +161,7 @@ export default async function PodesavanjaPage({ searchParams }: PageProps) {
               </form>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '0.75rem 1rem' }}>
-                {[['Naziv', o?.naziv], ['Email', o?.email], ['Adresa', o?.adresa], ['Telefon', o?.telefon]].map(([label, value]) => (
+                {[['Naziv', o?.naziv], ['Email', o?.email], ['Adresa', o?.adresa], ['Telefon', o?.telefon], ['Podsetnik (dana pre roka)', String(o?.podsetnik_dana ?? 7)]].map(([label, value]) => (
                   <React.Fragment key={label as string}>
                     <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontWeight: 500 }}>{label}</span>
                     <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>{value || '—'}</span>
