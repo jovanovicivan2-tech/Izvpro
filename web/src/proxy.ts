@@ -7,12 +7,12 @@ function shouldTrace(pathname: string): boolean {
   return TRACED_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const reqId = Math.random().toString(36).slice(2, 8);
 
   if (shouldTrace(pathname)) {
-    console.log(`[TRACE][middleware] path=${pathname} reqId=${reqId}`);
+    console.log(`[TRACE][proxy] path=${pathname} reqId=${reqId}`);
   }
 
   return await updateSession(request, reqId);
