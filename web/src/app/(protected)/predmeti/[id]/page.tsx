@@ -132,6 +132,9 @@ export default async function PredmetDetailPage({ params, searchParams }: PagePr
               </button>
             </form>
           ))}
+          <Link href={`/predmeti/${id}/stampa`} style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, border: '1px solid var(--color-border)', color: 'var(--color-text)', background: 'var(--color-surface)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            🖨 Štampaj
+          </Link>
           <Link href={`/predmeti/${id}/izmeni`} style={{ padding: '0.45rem 1rem', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600, border: '1px solid var(--color-border)', color: 'var(--color-text)', background: 'var(--color-surface)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
             Izmeni
           </Link>
