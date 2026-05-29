@@ -175,6 +175,34 @@ export default function Sidebar() {
 
       {/* Nav — glavna */}
       <nav style={{ flex: 1, padding: '0.75rem 0.625rem 0.5rem' }}>
+        {/* Pretraga */}
+        <form method="GET" action="/pretraga" style={{ position: 'relative', marginBottom: '0.85rem', padding: '0 0.25rem' }}>
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-faint)', pointerEvents: 'none' }}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            name="q"
+            type="search"
+            placeholder="Pretraga…"
+            aria-label="Pretraga"
+            style={{
+              width: '100%',
+              padding: '0.45rem 0.6rem 0.45rem 2rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-bg)',
+              color: 'var(--color-text)',
+              fontSize: 'var(--text-sm)',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </form>
+
         <p style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-faint)', padding: '0 0.75rem', marginBottom: '0.4rem' }}>
           Meni
         </p>

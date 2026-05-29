@@ -48,6 +48,7 @@ export default async function DashboardPage() {
     { count: aktivni },
     { count: rokoviDanas },
     { count: rokoviNedelja },
+    { count: zakasneli },
     { data: poslednjiPredmeti },
     { data: hitniRokovi },
   ] = await Promise.all([
@@ -55,6 +56,7 @@ export default async function DashboardPage() {
     supabase.from('predmeti').select('*', { count: 'exact', head: true }).eq('office_id', officeId).eq('status', 'aktivan'),
     supabase.from('rokovi').select('*', { count: 'exact', head: true }).eq('office_id', officeId).eq('datum_roka', today).neq('status', 'zavrsen'),
     supabase.from('rokovi').select('*', { count: 'exact', head: true }).eq('office_id', officeId).gte('datum_roka', today).lte('datum_roka', endOfWeekStr).neq('status', 'zavrsen'),
+    supabase.from('rokovi').select('*', { count: 'exact', head: true }).eq('office_id', officeId).lt('datum_roka', today).neq('status', 'zavrsen'),
     supabase.from('predmeti').select('id, broj_predmeta, godina, poverilac, duznik, status, iznos_glavnice, rok_sledece_radnje').eq('office_id', officeId).order('created_at', { ascending: false }).limit(8),
     supabase.from('rokovi').select('id, naziv_roka, datum_roka, prioritet, predmet_id, predmeti(broj_predmeta, godina, duznik)').eq('office_id', officeId).gte('datum_roka', today).lte('datum_roka', endOfWeekStr).neq('status', 'zavrsen').order('datum_roka', { ascending: true }).limit(6),
   ]);
@@ -125,6 +127,33 @@ export default async function DashboardPage() {
           + Novi predmet
         </Link>
       </div>
+
+      {/* Alert: zakasneli rokovi */}
+      {(zakasneli ?? 0) > 0 && (
+        <Link
+          href="/rokovi?filter=zakasneli"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.85rem 1.1rem',
+            marginBottom: '1.25rem',
+            borderRadius: 'var(--radius-lg)',
+            background: 'var(--color-error-highlight)',
+            border: '1px solid var(--color-error)',
+            textDecoration: 'none',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-error)', fontWeight: 600 }}>
+            {zakasneli === 1 ? '1 zakasneli rok' : `${zakasneli} zakasnelih rokova`} — kliknite za pregled
+          </span>
+        </Link>
+      )}
 
       {/* KPI kartice */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

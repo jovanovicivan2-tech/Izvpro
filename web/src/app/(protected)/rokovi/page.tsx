@@ -66,6 +66,8 @@ export default async function RokoviPage({ searchParams }: PageProps) {
     const endOfWeek = new Date();
     endOfWeek.setDate(endOfWeek.getDate() + 7);
     query = query.gte('datum_roka', today).lte('datum_roka', endOfWeek.toISOString().split('T')[0]).neq('status', 'zavrsen');
+  } else if (filter === 'zakasneli') {
+    query = query.lt('datum_roka', today).neq('status', 'zavrsen');
   } else if (filter === 'zavrsen') {
     query = query.eq('status', 'zavrsen');
   } else {
@@ -104,7 +106,7 @@ export default async function RokoviPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Rokovi</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            {rokovi?.length ?? 0} {activeFilter === 'zavrsen' ? 'završenih' : 'aktivnih'} rokova
+            {rokovi?.length ?? 0} {activeFilter === 'zavrsen' ? 'završenih' : activeFilter === 'zakasneli' ? 'zakasnelih' : 'aktivnih'} rokova
             {search && <span style={{ color: 'var(--color-primary)' }}> · pretraga: "{search}"</span>}
           </p>
         </div>
@@ -145,6 +147,7 @@ export default async function RokoviPage({ searchParams }: PageProps) {
             <Link href={`/rokovi${searchQuery}`} style={filterStyle('aktivni')}>Svi aktivni</Link>
             <Link href={`/rokovi?filter=danas${searchQuery}`} style={filterStyle('danas')}>Danas</Link>
             <Link href={`/rokovi?filter=nedelja${searchQuery}`} style={filterStyle('nedelja')}>Ova nedelja</Link>
+            <Link href={`/rokovi?filter=zakasneli${searchQuery}`} style={filterStyle('zakasneli')}>Zakasneli</Link>
             <Link href={`/rokovi?filter=zavrsen${searchQuery}`} style={filterStyle('zavrsen')}>Završeni</Link>
           </div>
 
@@ -157,6 +160,7 @@ export default async function RokoviPage({ searchParams }: PageProps) {
               <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
                 {activeFilter === 'danas' ? 'Nema rokova za danas.' :
                  activeFilter === 'nedelja' ? 'Nema rokova u narednih 7 dana.' :
+                 activeFilter === 'zakasneli' ? 'Nema zakasnelih rokova. ✓' :
                  activeFilter === 'zavrsen' ? 'Nema završenih rokova.' :
                  'Nema aktivnih rokova.'}
               </p>
