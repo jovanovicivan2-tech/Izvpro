@@ -144,6 +144,7 @@ export interface Rok {
   status: RokStatus;
   prioritet: RokPrioritet;
   napomena: string | null;
+  zaduzeni: string | null;   // = korisnici.id ili null
   created_at: string;
 }
 

@@ -44,7 +44,7 @@ export default async function RokoviPage({ searchParams }: PageProps) {
 
   const { filter, error, q } = await searchParams;
   const search = q?.trim() ?? '';
-  const { officeId } = await requireTenantContext();
+  const { officeId, userId } = await requireTenantContext();
   const supabase = await createClient();
 
   const today = new Date().toISOString().split('T')[0];
@@ -60,7 +60,9 @@ export default async function RokoviPage({ searchParams }: PageProps) {
     query = query.or(`naziv_roka.ilike.%${search}%,predmeti.duznik.ilike.%${search}%`);
   }
 
-  if (filter === 'danas') {
+  if (filter === 'moji') {
+    query = query.eq('zaduzeni', userId).neq('status', 'zavrsen');
+  } else if (filter === 'danas') {
     query = query.eq('datum_roka', today).neq('status', 'zavrsen');
   } else if (filter === 'nedelja') {
     const endOfWeek = new Date();
@@ -84,6 +86,16 @@ export default async function RokoviPage({ searchParams }: PageProps) {
     .eq('office_id', officeId)
     .eq('status', 'aktivan')
     .order('broj_predmeta', { ascending: true });
+
+  // Korisnici kancelarije — za dodelu i prikaz zaduženog
+  const { data: korisnici } = await supabase
+    .from('korisnici')
+    .select('id, ime_prezime')
+    .eq('office_id', officeId)
+    .order('ime_prezime', { ascending: true });
+  const korisniciMap = new Map(
+    ((korisnici as { id: string; ime_prezime: string }[] | null) ?? []).map((k) => [k.id, k.ime_prezime])
+  );
 
   const activeFilter = filter || 'aktivni';
   const searchQuery = search ? `&q=${encodeURIComponent(search)}` : '';
@@ -145,6 +157,7 @@ export default async function RokoviPage({ searchParams }: PageProps) {
           {/* Filteri */}
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
             <Link href={`/rokovi${searchQuery}`} style={filterStyle('aktivni')}>Svi aktivni</Link>
+            <Link href={`/rokovi?filter=moji${searchQuery}`} style={filterStyle('moji')}>Moji rokovi</Link>
             <Link href={`/rokovi?filter=danas${searchQuery}`} style={filterStyle('danas')}>Danas</Link>
             <Link href={`/rokovi?filter=nedelja${searchQuery}`} style={filterStyle('nedelja')}>Ova nedelja</Link>
             <Link href={`/rokovi?filter=zakasneli${searchQuery}`} style={filterStyle('zakasneli')}>Zakasneli</Link>
@@ -204,6 +217,12 @@ export default async function RokoviPage({ searchParams }: PageProps) {
                                 {r.predmeti.broj_predmeta}/{r.predmeti.godina}
                               </Link>
                               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{r.predmeti.duznik}</span>
+                            </>
+                          )}
+                          {r.zaduzeni && korisniciMap.get(r.zaduzeni) && (
+                            <>
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-faint)' }}>·</span>
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>👤 {korisniciMap.get(r.zaduzeni)}</span>
                             </>
                           )}
                         </div>
@@ -301,6 +320,18 @@ export default async function RokoviPage({ searchParams }: PageProps) {
                       <option value="visok">Visok</option>
                       <option value="srednji">Srednji</option>
                       <option value="nizak">Nizak</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: '0.375rem', color: 'var(--color-text)' }}>
+                      Zaduženi
+                    </label>
+                    <select name="zaduzeni" defaultValue="" style={{ ...inputStyle, width: '100%' }}>
+                      <option value="">— Niko —</option>
+                      {(korisnici as { id: string; ime_prezime: string }[] | null ?? []).map((k) => (
+                        <option key={k.id} value={k.id}>{k.ime_prezime}</option>
+                      ))}
                     </select>
                   </div>
 

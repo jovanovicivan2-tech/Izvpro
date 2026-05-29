@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     const datum_roka = (formData.get('datum_roka') as string)?.trim();
     const prioritet = (formData.get('prioritet') as string) || 'srednji';
     const napomena = (formData.get('napomena') as string)?.trim() || null;
+    const zaduzeni = (formData.get('zaduzeni') as string)?.trim() || null;
     const redirect_to = (formData.get('redirect_to') as string) || '/rokovi';
 
     if (!predmet_id || !naziv_roka || !datum_roka) {
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       datum_roka,
       prioritet,
       napomena,
+      zaduzeni,
       status: 'aktivan',
     });
 
