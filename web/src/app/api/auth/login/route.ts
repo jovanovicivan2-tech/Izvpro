@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Cookie ime koje @supabase/ssr middleware čita
 const PROJECT_REF = 'bwpyivqdinemhfrrjdhu';
 const SESSION_COOKIE = `sb-${PROJECT_REF}-auth-token`;
 const MAX_CHUNK_SIZE = 3180;
@@ -35,7 +34,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
     }
 
-    // Koristimo vanilla supabase-js (bez SSR wrapper-a) da izbegnemo PKCE flow
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -59,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const session = data.session;
 
-    // Proveriti da li je kancelarija aktivna — koristimo service role da zaobiđemo RLS
+    // Proveravamo office status direktno SQL-om da izbegnemo TypeScript probleme sa join tipovima
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -71,14 +69,40 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const { data: korisnikData } = await serviceSupabase
+    // Koristimo RPC/raw query da dobijemo office status bez TS join problema
+    const { data: officeData } = await serviceSupabase
+      .from('offices')
+      .select('status')
+      .eq('id',
+        serviceSupabase
+          .from('korisnici')
+          .select('office_id')
+          .eq('id', session.user.id)
+          .single()
+          .then(() => '') // placeholder — koristimo subquery ispod
+      )
+      .limit(1);
+
+    // Direktniji pristup: dva odvojena upita
+    const { data: korisnikRow } = await serviceSupabase
       .from('korisnici')
-      .select('office_id, offices(status)')
+      .select('office_id')
       .eq('id', session.user.id)
       .single();
 
-    const officeStatus = (korisnikData?.offices as { status: string } | null)?.status ?? null;
-    console.log(`[TRACE][login] officeStatus=${officeStatus} korisnikId=${session.user.id}`);
+    const officeId = korisnikRow?.office_id as string | null;
+    let officeStatus: string | null = null;
+
+    if (officeId) {
+      const { data: officeRow } = await serviceSupabase
+        .from('offices')
+        .select('status')
+        .eq('id', officeId)
+        .single();
+      officeStatus = (officeRow as { status: string } | null)?.status ?? null;
+    }
+
+    console.log(`[TRACE][login] officeStatus=${officeStatus} userId=${session.user.id} officeId=${officeId}`);
 
     if (officeStatus === 'pending') {
       return NextResponse.redirect(new URL('/login?error=office_pending', request.url), { status: 303 });
@@ -90,7 +114,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=office_inactive', request.url), { status: 303 });
     }
 
-    // Serializujemo session objekat tačno onako kako @supabase/ssr to očekuje
     const sessionJson = JSON.stringify({
       access_token: session.access_token,
       refresh_token: session.refresh_token,
@@ -102,7 +125,6 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.redirect(new URL('/dashboard', request.url), { status: 303 });
 
-    // Upisujemo chunked cookies koje middleware čita
     const chunks = createChunks(SESSION_COOKIE, sessionJson);
     const cookieOptions = {
       httpOnly: true,
@@ -114,7 +136,6 @@ export async function POST(request: NextRequest) {
 
     for (const chunk of chunks) {
       response.cookies.set(chunk.name, chunk.value, cookieOptions);
-      console.log(`[TRACE][login] set cookie=${chunk.name} len=${chunk.value.length}`);
     }
 
     console.log(`[TRACE][login] redirect=/dashboard cookies=${chunks.length}`);
