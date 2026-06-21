@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    console.log(`[TRACE][login] ok=${!!data?.session} error=${error?.message ?? 'none'}`);
+    console.log(`[TRACE][login] auth ok=${!!data?.session} error=${error?.message ?? 'none'}`);
 
     if (error || !data?.session) {
       return NextResponse.redirect(new URL('/login?error=invalid_credentials', request.url), { status: 303 });
@@ -57,61 +57,52 @@ export async function POST(request: NextRequest) {
 
     const session = data.session;
 
-    // Proveravamo office status direktno SQL-om da izbegnemo TypeScript probleme sa join tipovima
-    const serviceSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    // Proveravamo office status
+    try {
+      const serviceSupabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
 
-    // Koristimo RPC/raw query da dobijemo office status bez TS join problema
-    const { data: officeData } = await serviceSupabase
-      .from('offices')
-      .select('status')
-      .eq('id',
-        serviceSupabase
-          .from('korisnici')
-          .select('office_id')
-          .eq('id', session.user.id)
-          .single()
-          .then(() => '') // placeholder — koristimo subquery ispod
-      )
-      .limit(1);
-
-    // Direktniji pristup: dva odvojena upita
-    const { data: korisnikRow } = await serviceSupabase
-      .from('korisnici')
-      .select('office_id')
-      .eq('id', session.user.id)
-      .single();
-
-    const officeId = korisnikRow?.office_id as string | null;
-    let officeStatus: string | null = null;
-
-    if (officeId) {
-      const { data: officeRow } = await serviceSupabase
-        .from('offices')
-        .select('status')
-        .eq('id', officeId)
+      const { data: korisnikRow, error: kError } = await serviceSupabase
+        .from('korisnici')
+        .select('office_id, aktivan')
+        .eq('id', session.user.id)
         .single();
-      officeStatus = (officeRow as { status: string } | null)?.status ?? null;
-    }
 
-    console.log(`[TRACE][login] officeStatus=${officeStatus} userId=${session.user.id} officeId=${officeId}`);
+      console.log(`[TRACE][login] korisnik=${JSON.stringify(korisnikRow)} kError=${kError?.message}`);
 
-    if (officeStatus === 'pending') {
-      return NextResponse.redirect(new URL('/login?error=office_pending', request.url), { status: 303 });
-    }
-    if (officeStatus === 'suspended') {
-      return NextResponse.redirect(new URL('/login?error=office_suspended', request.url), { status: 303 });
-    }
-    if (!officeStatus || officeStatus !== 'active') {
-      return NextResponse.redirect(new URL('/login?error=office_inactive', request.url), { status: 303 });
+      // Ako korisnik nije aktivan
+      if (korisnikRow && korisnikRow.aktivan === false) {
+        return NextResponse.redirect(new URL('/login?error=user_inactive', request.url), { status: 303 });
+      }
+
+      // Ako postoji office_id, proveri status
+      if (korisnikRow?.office_id) {
+        const { data: officeRow, error: oError } = await serviceSupabase
+          .from('offices')
+          .select('status')
+          .eq('id', korisnikRow.office_id)
+          .single();
+
+        console.log(`[TRACE][login] office=${JSON.stringify(officeRow)} oError=${oError?.message}`);
+
+        const officeStatus = (officeRow as { status: string } | null)?.status;
+
+        if (officeStatus === 'pending') {
+          return NextResponse.redirect(new URL('/login?error=office_pending', request.url), { status: 303 });
+        }
+        if (officeStatus === 'suspended') {
+          return NextResponse.redirect(new URL('/login?error=office_suspended', request.url), { status: 303 });
+        }
+        if (officeStatus && officeStatus !== 'active') {
+          return NextResponse.redirect(new URL('/login?error=office_inactive', request.url), { status: 303 });
+        }
+      }
+    } catch (officeCheckErr) {
+      // Ne blokiramo login zbog greske u office proveri - logujemo i nastavljamo
+      console.error(`[TRACE][login] office check error (non-blocking):`, officeCheckErr);
     }
 
     const sessionJson = JSON.stringify({
