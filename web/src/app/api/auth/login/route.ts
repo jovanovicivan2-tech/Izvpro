@@ -59,22 +59,26 @@ export async function POST(request: NextRequest) {
 
     const session = data.session;
 
-       // Proveriti da li je kancelarija aktivna — koristimo service role da zaobiđemo RLS
-    // (anon key + novi token ne bi mogao da uradi join sa offices zbog RLS politike)
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const officeRes = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/korisnici?select=office_id,offices(status)&id=eq.${session.user.id}&limit=1`,
+    // Proveriti da li je kancelarija aktivna — koristimo service role da zaobiđemo RLS
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        headers: {
-          'Authorization': `Bearer ${serviceKey}`,
-          'apikey': serviceKey,
-          'Accept': 'application/json',
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
         },
       }
     );
-    const officeRows = officeRes.ok ? await officeRes.json() : [];
-    const officeStatus = officeRows?.[0]?.offices?.status ?? null;
-    console.log(`[TRACE][login] officeStatus=${officeStatus}`);
+
+    const { data: korisnikData } = await serviceSupabase
+      .from('korisnici')
+      .select('office_id, offices(status)')
+      .eq('id', session.user.id)
+      .single();
+
+    const officeStatus = (korisnikData?.offices as { status: string } | null)?.status ?? null;
+    console.log(`[TRACE][login] officeStatus=${officeStatus} korisnikId=${session.user.id}`);
 
     if (officeStatus === 'pending') {
       return NextResponse.redirect(new URL('/login?error=office_pending', request.url), { status: 303 });
@@ -85,6 +89,7 @@ export async function POST(request: NextRequest) {
     if (!officeStatus || officeStatus !== 'active') {
       return NextResponse.redirect(new URL('/login?error=office_inactive', request.url), { status: 303 });
     }
+
     // Serializujemo session objekat tačno onako kako @supabase/ssr to očekuje
     const sessionJson = JSON.stringify({
       access_token: session.access_token,
